@@ -27,13 +27,13 @@ const styles = StyleSheet.create({
     },
 
     logo: {
-        width: 50,
-        height: 50,
+        width: 30,
+        height: 30,
     },
 
     logoText: {
         color: "white",
-        fontSize: 20,
+        fontSize: 12,
         fontFamily: SAIRA_STENCIL_ONE_REGULAR,  
         letterSpacing: 4,
         left: 10

@@ -1,37 +1,51 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Pressable } from "react-native";
+
+import {View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Pressable} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
-import AntDesign from '@expo/vector-icons/AntDesign';
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { authStyles } from "../../style/authStyles";
 
-import { OPENSANS_REGULAR, SAIRA_STENCIL_ONE_REGULAR } from "../../../utils/const";
-// import { GoogleSignin } from 'npx expo install expo-auth-session expo-web-browser';
 
-export default function LoginForm() {
+import { OPENSANS_REGULAR, SAIRA_STENCIL_ONE_REGULAR } from "../../../utils/const";
+
+export default function SignupForm() {
+    const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleLogin = () => {
-        console.log("Login pressed", { email, password });
-        // Thêm logic đăng nhập ở đây
+    const handleSignup = () => {
+        console.log("Signup pressed", { username, email, password });
     };
-    const handleSignUp = () => {
-        console.log("Sign Up pressed");
-        // Thêm logic đăng ký ở đây
+
+    const handleLoginRedirect = () => {
+        console.log("Go to Login");
     };
-    const handleForgotPassword = () => {
-        console.log("Forgot Password pressed");
-        // Thêm logic quên mật khẩu ở đây
-    };
+
     const handleGoogleLogin = () => {
         console.log("Google login pressed");
     };
+
     return (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={authStyles.scrollContent}>
-            <Text style={authStyles.heading}>Welcome Back</Text>
-            <Text style={authStyles.subHeading}>Sign in to continue your journey</Text>
-            {/* <Text style={authStyles.title}>Login</Text> */}
 
+            <Text style={authStyles.heading}>Create Account</Text>
+            <Text style={authStyles.subHeading}>Your music world starts here.</Text>
+
+            {/* USERNAME */}
+            <View style={authStyles.inputGroup}>
+                <Text style={authStyles.label}>User Name</Text>
+                <TextInput
+                    value={username}
+                    onChangeText={setUsername}
+                    placeholder="Enter your username"
+                    placeholderTextColor="#888"
+                    style={authStyles.input}
+                    keyboardType="default"
+                    autoCapitalize="none"
+                />
+            </View>
+
+            {/* EMAIL */}
             <View style={authStyles.inputGroup}>
                 <Text style={authStyles.label}>Email Address</Text>
                 <TextInput
@@ -45,6 +59,7 @@ export default function LoginForm() {
                 />
             </View>
 
+            {/* PASSWORD */}
             <View style={authStyles.inputGroup}>
                 <Text style={authStyles.label}>Password</Text>
                 <TextInput
@@ -55,19 +70,17 @@ export default function LoginForm() {
                     secureTextEntry
                     style={authStyles.input}
                 />
-                <TouchableOpacity onPress={handleForgotPassword}>
-                    <Text style={authStyles.forgotText}>Forgot Password?</Text>
-                </TouchableOpacity>
             </View>
 
+            {/* CONTINUE BUTTON */}
             <Pressable
-                onPress={handleLogin}
+                onPress={handleSignup}
                 style={authStyles.buttonWrapper}
             >
                 {({ pressed }) =>
                     pressed ? (
                         <View style={authStyles.outlineButton}>
-                            <Text style={authStyles.buttonText}>Login</Text>
+                            <Text style={authStyles.buttonText}>Sign Up</Text>
                         </View>
                     ) : (
                         <LinearGradient
@@ -76,18 +89,20 @@ export default function LoginForm() {
                             end={{ x: 1, y: 0 }}
                             style={authStyles.gradientButton}
                         >
-                            <Text style={authStyles.buttonText}>Login</Text>
+                            <Text style={authStyles.buttonText}>Sign Up</Text>
                         </LinearGradient>
                     )
                 }
             </Pressable>
 
+            {/* DIVIDER */}
             <View style={authStyles.dividerContainer}>
                 <View style={authStyles.line} />
                 <Text style={authStyles.dividerText}>OR CONTINUE WITH</Text>
                 <View style={authStyles.line} />
             </View>
 
+            {/* SOCIAL */}
             <View style={authStyles.socialContainer}>
                 <Pressable
                     onPress={handleGoogleLogin}
@@ -103,8 +118,8 @@ export default function LoginForm() {
                 <Text style={authStyles.footerText}>
                     Don’t have an account?
                 </Text>
-                <TouchableOpacity onPress={handleSignUp}>
-                    <Text style={authStyles.footerLink}>Create one</Text>
+                <TouchableOpacity onPress={handleLoginRedirect}>
+                    <Text style={authStyles.footerLink}>Login</Text>
                 </TouchableOpacity>
             </View>
         </ScrollView>

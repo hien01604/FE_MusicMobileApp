@@ -1,6 +1,10 @@
 import { LinearGradient } from "expo-linear-gradient";
 import React, { ReactNode } from "react";
-import { View, StyleSheet } from "react-native";
+import {
+    View,
+    StyleSheet,
+    ImageBackground
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type LayoutProps = {
@@ -9,34 +13,55 @@ type LayoutProps = {
 
 export default function Layout({ children }: LayoutProps) {
     return (
-        <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-            <View style={styles.container}>
-                {children}
-            </View>
+        <ImageBackground
+            source={require("../../assets/bg.png")} // đổi đúng path của bạn
+            style={styles.background}
+            resizeMode="cover"
+        >
+            {/* Overlay tối toàn màn */}
+            <LinearGradient
+                colors={[
+                    "rgba(5,10,30,0.85)",
+                    "rgba(5,10,30,0.6)",
+                    "rgba(5,10,30,0.85)"
+                ]}
+                style={StyleSheet.absoluteFillObject}
+            />
+
+            {/* Glow hồng phía dưới */}
             <LinearGradient
                 pointerEvents="none"
-                colors={["transparent", "rgba(255,60,87,0.4)"]}
+                colors={["transparent", "rgba(255,60,87,0.5)"]}
                 style={styles.bottomGlow}
             />
-        </SafeAreaView>
+
+            <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+                <View style={styles.container}>
+                    {children}
+                </View>
+            </SafeAreaView>
+        </ImageBackground>
     );
 }
-
 const styles = StyleSheet.create({
+    background: {
+        flex: 1,
+    },
+
     safe: {
         flex: 1,
-        backgroundColor: "#0B0F2A", 
-        zIndex: 1
     },
+
     container: {
         flex: 1,
         paddingHorizontal: 25,
     },
+
     bottomGlow: {
         position: "absolute",
         bottom: 0,
         left: 0,
         right: 0,
-        height: 250,
+        height: 200,
     },
 });
