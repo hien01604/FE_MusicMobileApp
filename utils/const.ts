@@ -1,9 +1,3 @@
-import { StyleSheet } from "react-native";
 
-export const ORBITRON_BOLD = "orbitron-bold";
-
-export const globalStyles = StyleSheet.create({
-    globalFont: {
-        fontFamily: ORBITRON_BOLD
-    }
-})
+export const OPENSANS_REGULAR = "opensans-regular";
+export const SAIRA_STENCIL_ONE_REGULAR = "saira-stencil-one-regular";

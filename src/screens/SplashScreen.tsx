@@ -1,9 +1,10 @@
 import { View, Text, Image, StyleSheet } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { ORBITRON_BOLD } from "../../utils/const";
+import { SAIRA_STENCIL_ONE_REGULAR } from "../../utils/const";
+import Layout from "../components/Layout";
 
 export default function SplashScreen() {
     return (
+        <Layout>
         <View style={styles.container}>
 
             {/* Logo */}
@@ -16,20 +17,14 @@ export default function SplashScreen() {
             {/* Brand Name */}
             <Text style={styles.title}>SONIX</Text>
 
-            {/* Bottom Gradient Accent */}
-            <LinearGradient
-                colors={["transparent", "rgba(255,60,87,0.4)"]}
-                style={styles.bottomGlow}
-            />
-
-        </View>
+            </View>
+        </Layout>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#061C2E",
         justifyContent: "center",
         alignItems: "center",
     },
@@ -41,13 +36,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         color: "white",
-        fontFamily: ORBITRON_BOLD,
+        fontFamily: SAIRA_STENCIL_ONE_REGULAR,
         letterSpacing: 8,
-    },
-    bottomGlow: {
-        position: "absolute",
-        bottom: 0,
-        width: "100%",
-        height: 200,
     },
 });

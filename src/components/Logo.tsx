@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
 import LogoImage from "../../assets/logo.png";
-import { ORBITRON_BOLD } from "../../utils/const";
+import { SAIRA_STENCIL_ONE_REGULAR } from "../../utils/const";
 
 
 export default function Logo() {
@@ -23,21 +23,19 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: "row",
         alignItems: "center",
-        position: "absolute",
         top: 5,
-        left: 10,
     },
 
     logo: {
-        width: 60,
-        height: 60,
-        marginRight: 10,
+        width: 50,
+        height: 50,
     },
 
     logoText: {
         color: "white",
-        fontSize: 24,
-        fontFamily: ORBITRON_BOLD,  
+        fontSize: 20,
+        fontFamily: SAIRA_STENCIL_ONE_REGULAR,  
         letterSpacing: 4,
+        left: 10
     },
 });

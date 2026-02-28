@@ -2,6 +2,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { OPENSANS_REGULAR, SAIRA_STENCIL_ONE_REGULAR } from "../../../utils/const";
 // import { GoogleSignin } from 'npx expo install expo-auth-session expo-web-browser';
 
 export default function LoginForm() {
@@ -96,22 +97,27 @@ export default function LoginForm() {
 const styles = StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
-        paddingVertical: 100,
+        paddingVertical: 80,
     },
     title: {
         color: "white",
-        fontSize: 36,
-        fontWeight: "bold",
+        fontSize: 40,
+        // fontWeight: "bold",
         marginBottom: 40,
         textAlign: "center",
+        fontFamily: SAIRA_STENCIL_ONE_REGULAR,
+        letterSpacing: 4,
     },
     inputGroup: {
         marginBottom: 20,
+        // marginHorizontal: 12,
     },
     label: {
         color: "#ffffff",
         marginBottom: 8,
         marginLeft: 4,
+        fontFamily: OPENSANS_REGULAR,
+        fontWeight: "bold",
     },
     input: {
         backgroundColor: "rgba(26, 31, 58, 0.5)",
@@ -121,14 +127,19 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 16,
         color: "white",
+        fontFamily: OPENSANS_REGULAR,
     },
     forgotText: {
         textAlign: "right",
         color: "#ffffff",
         marginTop: 12,
+        fontFamily: OPENSANS_REGULAR,
+        textDecorationLine: "underline",
+        fontStyle: "italic",
     },
     buttonWrapper: {
         marginTop: 30,
+        // marginHorizontal: 16,
     },
     gradientButton: {
         paddingVertical: 16,
@@ -142,13 +153,14 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         color: "white",
-        fontWeight: "bold",
         fontSize: 18,
+        fontFamily: SAIRA_STENCIL_ONE_REGULAR,
     },
     dividerContainer: {
         flexDirection: "row",
         alignItems: "center",
         marginVertical: 40,
+        // marginHorizontal: 16,
     },
     line: {
         flex: 1,
@@ -157,13 +169,15 @@ const styles = StyleSheet.create({
     },
     dividerText: {
         color: "#6B7280",
-        marginHorizontal: 16,
+        // marginHorizontal: 16,
         fontSize: 12,
         fontWeight: "600",
+        fontFamily: OPENSANS_REGULAR,
     },
     socialContainer: {
         flexDirection: "row",
         justifyContent: "center",
+        backgroundColor: "#0B0F2A",
     },
     googleIconButton: {
         width: 56,
@@ -184,10 +198,12 @@ const styles = StyleSheet.create({
     footerText: {
         textAlign: "center",
         color: "#9CA3AF",
+        fontFamily: OPENSANS_REGULAR,
     },
     signupLink: {
         color: "#FF3C57",
         fontWeight: "bold",
         paddingHorizontal: 4,
+        fontFamily: OPENSANS_REGULAR,
     },
 });
