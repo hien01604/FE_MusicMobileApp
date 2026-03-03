@@ -31,8 +31,8 @@ export default function Layout({ children }: LayoutProps) {
             {/* Glow hồng phía dưới */}
             <LinearGradient
                 pointerEvents="none"
-                colors={["transparent", "rgba(255,60,87,0.5)"]}
-                style={styles.bottomGlow}
+                colors={["transparent", "rgba(253, 100, 120, 0.5)"]}
+                // style={styles.bottomGlow}
             />
 
             <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -57,11 +57,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 25,
     },
 
-    bottomGlow: {
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 200,
-    },
+    // bottomGlow: {
+    //     position: "absolute",
+    //     bottom: 0,
+    //     left: 0,
+    //     right: 0,
+    //     height: 180,
+    // },
 });
