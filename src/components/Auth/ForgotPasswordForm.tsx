@@ -1,12 +1,19 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
+import {
+    View,
+    Text,
+    TextInput,
+    Pressable,
+    ScrollView,
+    ActivityIndicator,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { authStyles } from "../../style/authStyles";
-
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../navigation/type";
+import { authService } from "../../api/authService";
 
 
 type NavigationProp = NativeStackNavigationProp<
@@ -17,12 +24,30 @@ type NavigationProp = NativeStackNavigationProp<
 export default function ForgotPasswordForm() {
     const navigation = useNavigation<NavigationProp>();
     const [email, setEmail] = useState<string>("");
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string>("");
 
-    const handleSendReset = (): void => {
-        console.log("Reset password for:", email);
-        // TODO: call API reset password
+    const handleSendReset = async (): Promise<void> => {
+        if (!email) {
+            setError("Please enter your email");
+            return;
+        }
+
+        setLoading(true);
+        setError("");
+
+        const result = await authService.forgotPassword({ email });
+
+        setLoading(false);
+
+        if (!result.success) {
+            setError(result.message);
+            return;
+        }
+
+        // Success - navigate back to login
+        navigation.goBack();
     };
-
     const handleBack = (): void => {
         navigation.goBack();
     };
@@ -58,9 +83,9 @@ export default function ForgotPasswordForm() {
                 />
             </View>
 
-            <Pressable onPress={handleSendReset} style={authStyles.buttonWrapper}>
+            <Pressable onPress={handleSendReset} style={authStyles.buttonWrapper} disabled={loading}>
                 {({ pressed }) =>
-                    pressed ? (
+                    pressed && !loading ? (
                         <View style={authStyles.outlineButton}>
                             <Text style={authStyles.buttonText}>Send Reset Link</Text>
                         </View>
@@ -71,11 +96,17 @@ export default function ForgotPasswordForm() {
                             end={{ x: 1, y: 0 }}
                             style={authStyles.gradientButton}
                         >
-                            <Text style={authStyles.buttonText}>Send Reset Link</Text>
+                            {loading ? (
+                                <ActivityIndicator size="small" color="white" />
+                            ) : (
+                                <Text style={authStyles.buttonText}>Send Reset Link</Text>
+                            )}
                         </LinearGradient>
                     )
                 }
             </Pressable>
+
+            {error && <Text style={{ color: "#FF3C57", textAlign: "center", marginTop: 10 }}>{error}</Text>}
         </ScrollView>
     );
 }
