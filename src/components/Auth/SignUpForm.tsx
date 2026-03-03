@@ -1,33 +1,41 @@
-
-import {View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Pressable} from "react-native";
+import React, { useState } from "react";
+import {
+    View,
+    Text,
+    TextInput,
+    ScrollView,
+    Pressable,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import { authStyles } from "../../style/authStyles";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "../../navigation/type";
+import AuthFooter from "./AuthFooter";
 
-
-import { OPENSANS_REGULAR, SAIRA_STENCIL_ONE_REGULAR } from "../../../utils/const";
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "SignUp">;
 
 export default function SignupForm() {
-    const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const navigation = useNavigation<NavigationProp>();
 
-    const handleSignup = () => {
+    const [username, setUsername] = useState<string>("");
+    const [email, setEmail] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+
+    const handleSignup = (): void => {
         console.log("Signup pressed", { username, email, password });
+        // TODO: call API signup
     };
 
-    const handleLoginRedirect = () => {
-        console.log("Go to Login");
-    };
-
-    const handleGoogleLogin = () => {
-        console.log("Google login pressed");
+    const handleLoginRedirect = (): void => {
+        navigation.navigate("Login");
     };
 
     return (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={authStyles.scrollContent}>
-
+        <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={authStyles.scrollContent}
+        >
             <Text style={authStyles.heading}>Create Account</Text>
             <Text style={authStyles.subHeading}>Your music world starts here.</Text>
 
@@ -38,7 +46,7 @@ export default function SignupForm() {
                     value={username}
                     onChangeText={setUsername}
                     placeholder="Enter your username"
-                    placeholderTextColor="#888"
+                    placeholderTextColor="#ffffff"
                     style={authStyles.input}
                     keyboardType="default"
                     autoCapitalize="none"
@@ -52,7 +60,7 @@ export default function SignupForm() {
                     value={email}
                     onChangeText={setEmail}
                     placeholder="Enter your email"
-                    placeholderTextColor="#888"
+                    placeholderTextColor="#ffffff"
                     style={authStyles.input}
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -66,17 +74,14 @@ export default function SignupForm() {
                     value={password}
                     onChangeText={setPassword}
                     placeholder="Enter your password"
-                    placeholderTextColor="#888"
+                    placeholderTextColor="#ffffff"
                     secureTextEntry
                     style={authStyles.input}
                 />
             </View>
 
             {/* CONTINUE BUTTON */}
-            <Pressable
-                onPress={handleSignup}
-                style={authStyles.buttonWrapper}
-            >
+            <Pressable onPress={handleSignup} style={authStyles.buttonWrapper}>
                 {({ pressed }) =>
                     pressed ? (
                         <View style={authStyles.outlineButton}>
@@ -95,33 +100,11 @@ export default function SignupForm() {
                 }
             </Pressable>
 
-            {/* DIVIDER */}
-            <View style={authStyles.dividerContainer}>
-                <View style={authStyles.line} />
-                <Text style={authStyles.dividerText}>OR CONTINUE WITH</Text>
-                <View style={authStyles.line} />
-            </View>
-
-            {/* SOCIAL */}
-            <View style={authStyles.socialContainer}>
-                <Pressable
-                    onPress={handleGoogleLogin}
-                    style={({ pressed }) => [
-                        authStyles.googleIconButton,
-                        pressed && authStyles.googlePressed
-                    ]}
-                >
-                    <AntDesign name="google-plus" size={35} color="#FF3C57" />
-                </Pressable>
-            </View>
-            <View style={authStyles.footerContainer}>
-                <Text style={authStyles.footerText}>
-                    Don’t have an account?
-                </Text>
-                <TouchableOpacity onPress={handleLoginRedirect}>
-                    <Text style={authStyles.footerLink}>Login</Text>
-                </TouchableOpacity>
-            </View>
+            <AuthFooter
+                footerText="Already have an account?"
+                footerLinkText="Login"
+                onFooterLinkPress={handleLoginRedirect}
+            />
         </ScrollView>
     );
 }

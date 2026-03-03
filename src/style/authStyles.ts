@@ -40,7 +40,7 @@ export const authStyles = StyleSheet.create({
         fontWeight: "bold",
     },
     input: {
-        backgroundColor: "rgba(26, 31, 58, 0.5)",
+        backgroundColor: "rgba(128, 128, 128, 0.45)",
         borderWidth: 2,
         borderColor: "#ffffff",
         borderRadius: 16,
@@ -87,7 +87,7 @@ export const authStyles = StyleSheet.create({
     dividerContainer: {
         flexDirection: "row",
         alignItems: "center",
-        marginVertical: 30,
+        marginVertical: 20,
     },
     line: {
         flex: 1,
@@ -103,6 +103,8 @@ export const authStyles = StyleSheet.create({
     socialContainer: {
         flexDirection: "row",
         justifyContent: "center",
+        marginTop: 20,
+        marginBottom: 20,
     },
     googleIconButton: {
         width: 50,
@@ -121,7 +123,14 @@ export const authStyles = StyleSheet.create({
         borderColor: "#FF3C57",
     },
     footerContainer: {
-        marginTop: 30,
+        marginTop: "auto",
+        paddingTop: 30,
+        paddingBottom: 20,
+        paddingHorizontal: 20,
+        flexDirection: "column",
+        alignItems: "center",
+    },
+    footerLinkContainer: {
         flexDirection: "row",
         justifyContent: "center",
         gap: 4,
@@ -135,7 +144,7 @@ export const authStyles = StyleSheet.create({
     footerLink: {
         color: "#FF3C57",
         fontWeight: "bold",
-        paddingHorizontal: 4,
+        paddingHorizontal: 10,
         fontFamily: OPENSANS_REGULAR,
         fontSize: 15,
     },

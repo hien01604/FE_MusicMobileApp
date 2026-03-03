@@ -1,36 +1,45 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Pressable } from "react-native";
+import React, { useState } from "react";
+import {
+    View,
+    Text,
+    TextInput,
+    ScrollView,
+    Pressable,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
-import AntDesign from '@expo/vector-icons/AntDesign';
 import { authStyles } from "../../style/authStyles";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "../../navigation/type";
+import AuthFooter from "./AuthFooter";
 
-import { OPENSANS_REGULAR, SAIRA_STENCIL_ONE_REGULAR } from "../../../utils/const";
-// import { GoogleSignin } from 'npx expo install expo-auth-session expo-web-browser';
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Login">;
 
 export default function LoginForm() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const navigation = useNavigation<NavigationProp>();
 
-    const handleLogin = () => {
+    const [email, setEmail] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+
+    const handleLogin = (): void => {
         console.log("Login pressed", { email, password });
-        // Thêm logic đăng nhập ở đây
     };
-    const handleSignUp = () => {
-        console.log("Sign Up pressed");
-        // Thêm logic đăng ký ở đây
+
+    const handleForgotPassword = (): void => {
+        navigation.navigate("ForgotPassword");
     };
-    const handleForgotPassword = () => {
-        console.log("Forgot Password pressed");
-        // Thêm logic quên mật khẩu ở đây
+
+    const handleSignUp = (): void => {
+        navigation.navigate("SignUp");
     };
-    const handleGoogleLogin = () => {
-        console.log("Google login pressed");
-    };
+
     return (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={authStyles.scrollContent}>
+        <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={authStyles.scrollContent}
+        >
             <Text style={authStyles.heading}>Welcome Back</Text>
             <Text style={authStyles.subHeading}>Sign in to continue your journey</Text>
-            {/* <Text style={authStyles.title}>Login</Text> */}
 
             <View style={authStyles.inputGroup}>
                 <Text style={authStyles.label}>Email Address</Text>
@@ -38,7 +47,7 @@ export default function LoginForm() {
                     value={email}
                     onChangeText={setEmail}
                     placeholder="Enter your email"
-                    placeholderTextColor="#888"
+                    placeholderTextColor="#ffffff"
                     style={authStyles.input}
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -51,19 +60,17 @@ export default function LoginForm() {
                     value={password}
                     onChangeText={setPassword}
                     placeholder="Enter your password"
-                    placeholderTextColor="#888"
+                    placeholderTextColor="#ffffff"
                     secureTextEntry
                     style={authStyles.input}
                 />
-                <TouchableOpacity onPress={handleForgotPassword}>
+
+                <Pressable onPress={handleForgotPassword}>
                     <Text style={authStyles.forgotText}>Forgot Password?</Text>
-                </TouchableOpacity>
+                </Pressable>
             </View>
 
-            <Pressable
-                onPress={handleLogin}
-                style={authStyles.buttonWrapper}
-            >
+            <Pressable onPress={handleLogin} style={authStyles.buttonWrapper}>
                 {({ pressed }) =>
                     pressed ? (
                         <View style={authStyles.outlineButton}>
@@ -82,31 +89,11 @@ export default function LoginForm() {
                 }
             </Pressable>
 
-            <View style={authStyles.dividerContainer}>
-                <View style={authStyles.line} />
-                <Text style={authStyles.dividerText}>OR CONTINUE WITH</Text>
-                <View style={authStyles.line} />
-            </View>
-
-            <View style={authStyles.socialContainer}>
-                <Pressable
-                    onPress={handleGoogleLogin}
-                    style={({ pressed }) => [
-                        authStyles.googleIconButton,
-                        pressed && authStyles.googlePressed
-                    ]}
-                >
-                    <AntDesign name="google-plus" size={35} color="#FF3C57" />
-                </Pressable>
-            </View>
-            <View style={authStyles.footerContainer}>
-                <Text style={authStyles.footerText}>
-                    Don’t have an account?
-                </Text>
-                <TouchableOpacity onPress={handleSignUp}>
-                    <Text style={authStyles.footerLink}>Create one</Text>
-                </TouchableOpacity>
-            </View>
+            <AuthFooter
+                footerText="Don't have an account?"
+                footerLinkText="Create one"
+                onFooterLinkPress={handleSignUp}
+            />
         </ScrollView>
     );
 }
