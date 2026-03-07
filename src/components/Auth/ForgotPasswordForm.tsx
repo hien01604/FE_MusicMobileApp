@@ -80,6 +80,7 @@ export default function ForgotPasswordForm() {
                     style={authStyles.input}
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    underlineColorAndroid="transparent"
                 />
             </View>
 

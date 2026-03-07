@@ -1,8 +1,8 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { authService } from "../api/authService";
 import { User } from "../types/auth.types";
-import { tokenStorage } from "../utils/tokenStorage";
-import { tokenManager } from "../utils/tokenManager";
+import { tokenStorage } from "../../utils/tokenStorage";
+import { tokenManager } from "../../utils/tokenManager";
 
 export interface AuthContextType {
     user: User | null;

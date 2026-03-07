@@ -74,6 +74,7 @@ export default function SignupForm() {
                     style={authStyles.input}
                     keyboardType="default"
                     autoCapitalize="none"
+                    underlineColorAndroid="transparent"
                 />
             </View>
 
@@ -88,6 +89,7 @@ export default function SignupForm() {
                     style={authStyles.input}
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    underlineColorAndroid="transparent"
                 />
             </View>
 
@@ -101,6 +103,7 @@ export default function SignupForm() {
                     placeholderTextColor="#ffffff"
                     secureTextEntry
                     style={authStyles.input}
+                    underlineColorAndroid="transparent"
                 />
             </View>
 

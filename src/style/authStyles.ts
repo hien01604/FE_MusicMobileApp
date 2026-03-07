@@ -31,6 +31,7 @@ export const authStyles = StyleSheet.create({
     // },
     inputGroup: {
         marginBottom: 20,
+        paddingHorizontal: 4,
     },
     label: {
         color: "#ffffff",
@@ -41,13 +42,19 @@ export const authStyles = StyleSheet.create({
     },
     input: {
         backgroundColor: "rgba(128, 128, 128, 0.45)",
-        borderWidth: 2,
+        borderWidth: 1,
         borderColor: "#ffffff",
         borderRadius: 16,
         paddingHorizontal: 20,
         paddingVertical: 16,
         color: "white",
         fontFamily: OPENSANS_REGULAR,
+        outlineWidth: 0,
+        elevation: 0,
+    },
+    inputFocused: {
+        borderColor: "#f9f6f7",
+        borderWidth: 2,
     },
     forgotText: {
         textAlign: "right",
@@ -88,17 +95,19 @@ export const authStyles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         marginVertical: 20,
+        width: "100%"
     },
     line: {
         flex: 1,
         height: 1,
-        backgroundColor: "#1F2937",
+        backgroundColor: "#9CA3AF",
     },
     dividerText: {
         color: "#6B7280",
         fontSize: 12,
         fontWeight: "600",
         fontFamily: OPENSANS_REGULAR,
+        marginHorizontal: 10,
     },
     socialContainer: {
         flexDirection: "row",

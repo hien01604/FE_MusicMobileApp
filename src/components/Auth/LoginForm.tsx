@@ -25,6 +25,8 @@ export default function LoginForm() {
     const [password, setPassword] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>("");
+    const [emailFocused, setEmailFocused] = useState(false);
+    const [passwordFocused, setPasswordFocused] = useState(false);
 
     const handleLogin = async (): Promise<void> => {
         if (!email || !password) {
@@ -72,9 +74,15 @@ export default function LoginForm() {
                     onChangeText={setEmail}
                     placeholder="Enter your email"
                     placeholderTextColor="#ffffff"
-                    style={authStyles.input}
+                    style={[
+                        authStyles.input,
+                        emailFocused && authStyles.inputFocused
+                    ]}
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    underlineColorAndroid="transparent"
+                    onFocus={() => setEmailFocused(true)}
+                    onBlur={() => setEmailFocused(false)}
                 />
             </View>
 
@@ -84,9 +92,15 @@ export default function LoginForm() {
                     value={password}
                     onChangeText={setPassword}
                     placeholder="Enter your password"
-                    placeholderTextColor="#ffffff"
+                    placeholderTextColor="rgba(255,255,255,0.6)"
                     secureTextEntry
-                    style={authStyles.input}
+                    style={[
+                        authStyles.input,
+                        passwordFocused && authStyles.inputFocused
+                    ]}
+                    underlineColorAndroid="transparent"
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={() => setPasswordFocused(false)}
                 />
 
                 <Pressable onPress={handleForgotPassword}>
@@ -94,7 +108,9 @@ export default function LoginForm() {
                 </Pressable>
             </View>
 
-            <Pressable onPress={handleLogin} style={authStyles.buttonWrapper} disabled={loading}>
+            <Pressable onPress={handleLogin}
+                style={authStyles.buttonWrapper}
+                disabled={loading || !email || !password}>
                 {({ pressed }) =>
                     pressed && !loading ? (
                         <View style={authStyles.outlineButton}>

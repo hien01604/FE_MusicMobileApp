@@ -15,7 +15,7 @@ type LayoutProps = {
 export default function Layout({ children }: LayoutProps) {
     return (
         <ImageBackground
-            source={require("../../assets/bg/bg.png")}
+            source={require("../../assets/bg/welcome-bg.png")}
             style={styles.background}
             resizeMode="cover"
         >
@@ -28,13 +28,6 @@ export default function Layout({ children }: LayoutProps) {
                 ]}
                 style={StyleSheet.absoluteFill}
             />
-
-            {/* Glow hồng phía dưới
-            <LinearGradient
-                pointerEvents="none"
-                colors={["transparent", "rgba(253, 100, 120, 0.5)"]}
-                style={styles.bottomGlow}
-            /> */}
 
             <SafeAreaView style={styles.safe}>
                 <View style={styles.container}>
@@ -61,12 +54,4 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: 30,
     },
-
-    // bottomGlow: {
-    //     position: "absolute",
-    //     bottom: 0,
-    //     left: 0,
-    //     right: 0,
-    //     height: 200,
-    // },
 });
