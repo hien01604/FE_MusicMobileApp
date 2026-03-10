@@ -14,8 +14,12 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../navigation/type";
 import AuthFooter from "./AuthFooter";
 import { useAuth } from "../../hooks/useAuth";
+import { AUTH_UI_ONLY_MODE } from "../../../utils/const";
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Login">;
+type NavigationProp = NativeStackNavigationProp<
+    RootStackParamList,
+    "Login"
+>;
 
 export default function LoginForm() {
     const navigation = useNavigation<NavigationProp>();
@@ -29,7 +33,12 @@ export default function LoginForm() {
     const [passwordFocused, setPasswordFocused] = useState(false);
 
     const handleLogin = async (): Promise<void> => {
-        if (!email || !password) {
+        if (AUTH_UI_ONLY_MODE) {
+            navigation.navigate("Welcome_1");
+            return;
+        }
+
+        if (!email.trim() || !password) {
             setError("Please enter email and password");
             return;
         }
@@ -37,19 +46,12 @@ export default function LoginForm() {
         setLoading(true);
         setError("");
 
-        const result = await login(email, password);
-
+        const result = await login(email.trim(), password);
         setLoading(false);
 
         if (!result.success) {
             setError(result.message);
-            return;
         }
-
-        navigation.reset({
-            index: 0,
-            routes: [{ name: "Home" }],
-        });
     };
     const handleForgotPassword = (): void => {
         navigation.navigate("ForgotPassword");
@@ -63,6 +65,7 @@ export default function LoginForm() {
         <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={authStyles.scrollContent}
+            keyboardShouldPersistTaps="handled"
         >
             <Text style={authStyles.heading}>Welcome Back</Text>
             <Text style={authStyles.subHeading}>Sign in to continue your journey</Text>
@@ -110,7 +113,7 @@ export default function LoginForm() {
 
             <Pressable onPress={handleLogin}
                 style={authStyles.buttonWrapper}
-                disabled={loading || !email || !password}>
+                disabled={AUTH_UI_ONLY_MODE ? loading : loading || !email || !password}>
                 {({ pressed }) =>
                     pressed && !loading ? (
                         <View style={authStyles.outlineButton}>

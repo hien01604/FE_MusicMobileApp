@@ -7,6 +7,8 @@ import LoginScreen from "../screens/LoginScreen";
 import SignUpScreen from "../screens/SignUpScreen";
 import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import HomeScreen from "../screens/HomeScreen";
+import WelcomeScreen_1 from "../screens/WelcomeScreen_1";
+
 
 import { useAuth } from "../hooks/useAuth";
 import type { RootStackParamList } from "./type";
@@ -15,19 +17,28 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
     const { isAuthenticated, isLoading } = useAuth();
+    const [isSplashFinished, setSplashFinished] = React.useState(false);
 
-    if (isLoading) {
-        return <SplashScreen showLoadingText={true} />;
+    if (!isSplashFinished) {
+        return (
+            <SplashScreen
+                showLoadingText={true}
+                onFinish={() => setSplashFinished(true)}
+            />
+        );
     }
 
     return (
         <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator
+                initialRouteName={isAuthenticated ? "Home" : "Login"}
+                screenOptions={{ headerShown: false }}
+            >
+                <Stack.Screen name="Welcome_1" component={WelcomeScreen_1} />
+
                 {isAuthenticated ? (
-                    // Protected screens (user is logged in)
                     <Stack.Screen name="Home" component={HomeScreen} />
                 ) : (
-                    // Auth screens (user is not logged in)
                     <>
                         <Stack.Screen name="Login" component={LoginScreen} />
                         <Stack.Screen name="SignUp" component={SignUpScreen} />

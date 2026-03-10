@@ -1,25 +1,20 @@
-import { LinearGradient } from "expo-linear-gradient";
 import React, { ReactNode } from "react";
-import {
-    View,
-    StyleSheet,
-    ImageBackground,
-    Dimensions
-} from "react-native";
+import { View, StyleSheet, ImageBackground } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type LayoutProps = {
+type Props = {
     children: ReactNode;
 };
 
-export default function Layout({ children }: LayoutProps) {
+export default function WelcomeLayout({ children }: Props) {
     return (
         <ImageBackground
-            source={require("../../assets/bg/welcome-bg.png")}
+            source={require("../../../assets/bg/welcome-bg.png")}
             style={styles.background}
             resizeMode="cover"
         >
-            {/* Overlay tối */}
+            {/* dark overlay */}
             <LinearGradient
                 colors={[
                     "rgba(5,10,30,0.85)",
@@ -30,11 +25,8 @@ export default function Layout({ children }: LayoutProps) {
             />
 
             <SafeAreaView style={styles.safe}>
-                <View style={styles.container}>
-                    {children}
-                </View>
+                <View style={styles.container}>{children}</View>
             </SafeAreaView>
-
         </ImageBackground>
     );
 }
@@ -42,8 +34,6 @@ export default function Layout({ children }: LayoutProps) {
 const styles = StyleSheet.create({
     background: {
         flex: 1,
-        width: "100%",
-        height: "100%",
     },
 
     safe: {
@@ -53,5 +43,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: 30,
+        justifyContent: "space-between",
+        alignItems: "center",
     },
 });

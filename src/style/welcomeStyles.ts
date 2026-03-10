@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { OPENSANS_REGULAR, SAIRA_STENCIL_ONE_REGULAR } from "../../utils/const";
 
 export const welcomeStyles = StyleSheet.create({
     background: {
@@ -6,31 +7,32 @@ export const welcomeStyles = StyleSheet.create({
         width: "100%",
         height: "100%",
     },
-
-    container: {
-        flex: 1,
+    logo: {
         justifyContent: "center",
         alignItems: "center",
+        width: 100,
+        height: 100,
+        marginBottom: 50,
+    },
+    container: {
+        flex: 1,
+        alignItems: "center",
+        marginTop: 100,
         paddingHorizontal: 30,
     },
-
-    logo: {
-        fontSize: 40,
-        color: "#FF5A87",
-        marginBottom: 40,
-    },
-
-    title: {
-        fontSize: 28,
+    heading: {
+        fontSize: 32,
         color: "white",
-        fontWeight: "600",
+        fontFamily: SAIRA_STENCIL_ONE_REGULAR,
         textAlign: "center",
     },
 
-    subtitle: {
-        marginTop: 10,
+    subHeading: {
         fontSize: 16,
-        color: "#D1D5DB",
+        color: "#B0B3C7",
+        marginTop: 4,
+        marginBottom: 40,
+        fontFamily: OPENSANS_REGULAR,
         textAlign: "center",
     },
 
