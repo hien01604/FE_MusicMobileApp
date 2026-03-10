@@ -3,25 +3,25 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import WelcomeLayout from "../components/Welcome/WelcomeLayout";
-import WelcomeComponent from "../components/Welcome/Welcome_1";
+import WelcomeComponent from "../components/Welcome/Welcome_2";
 
 import { RootStackParamList } from "../navigation/type";
 
 type NavigationProp = NativeStackNavigationProp<
     RootStackParamList,
-    "Welcome_1"
+    "Welcome_2"
 >;
 
-export default function WelcomeScreen_1() {
+export default function WelcomeScreen_2() {
     const navigation = useNavigation<NavigationProp>();
 
-    const handleStart = () => {
-        navigation.navigate("Welcome_2");
+    const handleContinue = () => {
+        // navigation.navigate("Welcome_3");
     };
 
     return (
         <WelcomeLayout>
-            <WelcomeComponent onStart={handleStart} />
+            <WelcomeComponent onContinue={handleContinue} />
         </WelcomeLayout>
     );
 }

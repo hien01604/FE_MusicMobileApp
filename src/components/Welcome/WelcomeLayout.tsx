@@ -5,16 +5,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 type Props = {
     children: ReactNode;
+    bottom?: ReactNode;
 };
 
-export default function WelcomeLayout({ children }: Props) {
+export default function WelcomeLayout({ children, bottom }: Props) {
     return (
         <ImageBackground
             source={require("../../../assets/bg/welcome-bg.png")}
             style={styles.background}
             resizeMode="cover"
         >
-            {/* dark overlay */}
             <LinearGradient
                 colors={[
                     "rgba(5,10,30,0.85)",
@@ -25,7 +25,17 @@ export default function WelcomeLayout({ children }: Props) {
             />
 
             <SafeAreaView style={styles.safe}>
-                <View style={styles.container}>{children}</View>
+
+                {/* Content */}
+                <View style={styles.content}>
+                    {children}
+                </View>
+
+                {/* Fixed Bottom */}
+                <View style={styles.bottom}>
+                    {bottom}
+                </View>
+
             </SafeAreaView>
         </ImageBackground>
     );
@@ -40,10 +50,18 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 
-    container: {
+    content: {
         flex: 1,
         paddingHorizontal: 30,
-        justifyContent: "space-between",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    bottom: {
+        position: "absolute",
+        bottom: 50,
+        left: 30,
+        right: 30,
         alignItems: "center",
     },
 });

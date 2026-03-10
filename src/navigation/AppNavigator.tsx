@@ -12,6 +12,7 @@ import WelcomeScreen_1 from "../screens/WelcomeScreen_1";
 
 import { useAuth } from "../hooks/useAuth";
 import type { RootStackParamList } from "./type";
+import WelcomeScreen_2 from "../screens/WelcomeScreen_2";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -35,6 +36,7 @@ export default function AppNavigator() {
                 screenOptions={{ headerShown: false }}
             >
                 <Stack.Screen name="Welcome_1" component={WelcomeScreen_1} />
+                <Stack.Screen name="Welcome_2" component={WelcomeScreen_2} />
 
                 {isAuthenticated ? (
                     <Stack.Screen name="Home" component={HomeScreen} />

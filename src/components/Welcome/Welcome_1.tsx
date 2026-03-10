@@ -1,15 +1,15 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, Pressable, Image, Animated } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { welcomeStyles } from "../../style/welcomeStyles";
+import { welcomeStyles } from "../../style/welcomeStyles_1";
 import LogoImage from "../../../assets/logo.png";
+import ProgressDots from "./ProgressDots";
 
 type Props = {
     onStart: () => void;
 };
 
 export default function WelcomeComponent({ onStart }: Props) {
-
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const translateY = useRef(new Animated.Value(20)).current;
 
@@ -36,9 +36,9 @@ export default function WelcomeComponent({ onStart }: Props) {
                 transform: [{ translateY }]
             }}
         >
-
-            {/* Title */}
-            <View style={welcomeStyles.container}>
+            
+            {/* CONTENT */}
+            <View style={welcomeStyles.content}>
                 <Image
                     source={LogoImage}
                     style={welcomeStyles.logo}
@@ -52,7 +52,10 @@ export default function WelcomeComponent({ onStart }: Props) {
                 <Text style={welcomeStyles.subHeading}>
                     Let's personalize your music experience.
                 </Text>
-                {/* Button */}
+            </View>
+
+            {/* FIXED BOTTOM */}
+            <View style={welcomeStyles.bottomContainer}>
                 <Pressable onPress={onStart} style={welcomeStyles.button}>
                     <LinearGradient
                         colors={["#FF3C57", "#eb8196"]}
@@ -66,9 +69,9 @@ export default function WelcomeComponent({ onStart }: Props) {
                     </LinearGradient>
                 </Pressable>
 
+                <ProgressDots step={1} total={4} />
             </View>
 
-            
         </Animated.View>
     );
 }

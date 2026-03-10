@@ -10,6 +10,7 @@ export type RootStackParamList = {
     ForgotPassword: undefined;
     Home: undefined;
     Welcome_1: undefined;
+    Welcome_2: undefined
 };
 
 /* ================= GENERIC HELPERS ================= */
