@@ -14,6 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../navigation/type";
 import { authService } from "../../api/authService";
+import BackButton from "../BackButton";
 
 
 type NavigationProp = NativeStackNavigationProp<
@@ -48,22 +49,13 @@ export default function ForgotPasswordForm() {
         // Success - navigate back to login
         navigation.goBack();
     };
-    const handleBack = (): void => {
-        navigation.goBack();
-    };
 
     return (
         <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={authStyles.scrollContent}
         >
-            <Pressable
-                onPress={handleBack}
-                style={{ marginBottom: 10 }}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            >
-                <AntDesign name="arrow-left" size={22} color="#FF3C57" />
-            </Pressable>
+            <BackButton onBack={navigation.goBack} />
 
             <Text style={authStyles.heading}>Forgot Password?</Text>
             <Text style={authStyles.subHeading}>
