@@ -1,6 +1,6 @@
 import { SAIRA_STENCIL_ONE_REGULAR, OPENSANS_REGULAR } from "../../utils/const";
 import { StyleSheet } from "react-native";
-export const welcomeStyles = StyleSheet.create({
+export const welcomeStyles_1 = StyleSheet.create({
 
     container: {
         flex: 1,
@@ -22,6 +22,7 @@ export const welcomeStyles = StyleSheet.create({
     heading: {
         fontSize: 32,
         color: "white",
+        marginBottom: 20,
         fontFamily: SAIRA_STENCIL_ONE_REGULAR,
         textAlign: "center",
     },
@@ -29,7 +30,7 @@ export const welcomeStyles = StyleSheet.create({
     subHeading: {
         fontSize: 16,
         color: "#B0B3C7",
-        marginTop: 4,
+        marginBottom: 30,
         fontFamily: OPENSANS_REGULAR,
         textAlign: "center",
     },
@@ -51,6 +52,16 @@ export const welcomeStyles = StyleSheet.create({
         paddingVertical: 16,
         borderRadius: 30,
         alignItems: "center",
+    },
+
+    outlineButton: {
+        paddingVertical: 14,
+        borderRadius: 30,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 2,
+        borderColor: "#FF3C57",
+        backgroundColor: "transparent",
     },
 
     buttonText: {

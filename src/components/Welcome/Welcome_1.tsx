@@ -1,9 +1,8 @@
 import React, { useEffect, useRef } from "react";
-import { View, Text, Pressable, Image, Animated } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { welcomeStyles } from "../../style/welcomeStyles_1";
+import { View, Text, Image, Animated } from "react-native";
+import { welcomeStyles_1 } from "../../style/welcomeStyles_1";
 import LogoImage from "../../../assets/logo.png";
-import ProgressDots from "./ProgressDots";
+import WelcomeBottom from "./WelcomeBottom";
 
 type Props = {
     onStart: () => void;
@@ -38,39 +37,28 @@ export default function WelcomeComponent({ onStart }: Props) {
         >
             
             {/* CONTENT */}
-            <View style={welcomeStyles.content}>
+            <View style={welcomeStyles_1.content}>
                 <Image
                     source={LogoImage}
-                    style={welcomeStyles.logo}
+                    style={welcomeStyles_1.logo}
                     resizeMode="contain"
                 />
 
-                <Text style={welcomeStyles.heading}>
+                <Text style={welcomeStyles_1.heading}>
                     Welcome to SONIX
                 </Text>
 
-                <Text style={welcomeStyles.subHeading}>
+                <Text style={welcomeStyles_1.subHeading}>
                     Let's personalize your music experience.
                 </Text>
             </View>
 
-            {/* FIXED BOTTOM */}
-            <View style={welcomeStyles.bottomContainer}>
-                <Pressable onPress={onStart} style={welcomeStyles.button}>
-                    <LinearGradient
-                        colors={["#FF3C57", "#eb8196"]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={welcomeStyles.gradientButton}
-                    >
-                        <Text style={welcomeStyles.buttonText}>
-                            Get Started
-                        </Text>
-                    </LinearGradient>
-                </Pressable>
-
-                <ProgressDots step={1} total={4} />
-            </View>
+            {/* BOTTOM */}
+            <WelcomeBottom
+                text="Get Started"
+                step={1}
+                onPress={onStart}
+            />
 
         </Animated.View>
     );
