@@ -3,29 +3,15 @@ import { View, Text, Image, Animated } from "react-native";
 import { welcomeStyles_1 } from "../../style/welcomeStyles_1";
 import LogoImage from "../../../assets/logo.png";
 import WelcomeBottom from "./WelcomeBottom";
+import useFadeSlideAnimation from "../../animations/useFadeSlideAnimation";
 
 type Props = {
     onStart: () => void;
 };
 
 export default function WelcomeComponent({ onStart }: Props) {
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const translateY = useRef(new Animated.Value(20)).current;
+    const { fadeAnim, translateY } = useFadeSlideAnimation();
 
-    useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 700,
-                useNativeDriver: true,
-            }),
-            Animated.timing(translateY, {
-                toValue: 0,
-                duration: 700,
-                useNativeDriver: true,
-            }),
-        ]).start();
-    }, []);
 
     return (
         <Animated.View

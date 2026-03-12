@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, Pressable, Animated } from "react-native";
+import { View, Text, Animated } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { welcomeStyles_3 } from "../../style/welcomeStyles_3";
 import { welcomeStyles_1 } from "../../style/welcomeStyles_1";
 import MoodCard from "./MoodCard";
 import WelcomeBottom from "./WelcomeBottom";
 import BackButton from "../BackButton";
+import useFadeSlideAnimation from "../../animations/useFadeSlideAnimation";
 
 type Props = {
     onContinue: () => void;
@@ -24,6 +25,8 @@ const moods = [
 
 export default function Welcome_3({ onContinue }: Props) {
     const navigation = useNavigation();
+    const { fadeAnim, translateY } = useFadeSlideAnimation();
+
 
     const [selected, setSelected] = useState<string[]>([]);
     const disabled = selected.length === 0;
@@ -40,25 +43,6 @@ export default function Welcome_3({ onContinue }: Props) {
             setSelected([...selected, item]);
         }
     };
-
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const translateY = useRef(new Animated.Value(20)).current;
-
-    useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 700,
-                useNativeDriver: true,
-            }),
-            Animated.timing(translateY, {
-                toValue: 0,
-                duration: 700,
-                useNativeDriver: true,
-            }),
-        ]).start();
-    }, []);
-
     return (
         <Animated.View
             style={{

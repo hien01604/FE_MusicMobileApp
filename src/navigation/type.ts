@@ -11,7 +11,8 @@ export type RootStackParamList = {
     Home: undefined;
     Welcome_1: undefined;
     Welcome_2: undefined;
-    Welcome_3: undefined
+    Welcome_3: undefined;
+    Welcome_4: undefined;
 };
 
 /* ================= GENERIC HELPERS ================= */

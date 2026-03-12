@@ -6,6 +6,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import { welcomeStyles_1 } from "../../style/welcomeStyles_1";
 import WelcomeBottom from "./WelcomeBottom";
 import BackButton from "../BackButton";
+import useFadeSlideAnimation from "../../animations/useFadeSlideAnimation";
 
 type Props = {
     onContinue: () => void;
@@ -44,24 +45,8 @@ export default function Welcome_2({ onContinue }: Props) {
 
         onContinue();
     };
+    const { fadeAnim, translateY } = useFadeSlideAnimation();
 
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const translateY = useRef(new Animated.Value(20)).current;
-
-    useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 700,
-                useNativeDriver: true,
-            }),
-            Animated.timing(translateY, {
-                toValue: 0,
-                duration: 700,
-                useNativeDriver: true,
-            }),
-        ]).start();
-    }, []);
 
     return (
         <Animated.View

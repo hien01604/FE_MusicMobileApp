@@ -67,6 +67,7 @@ export const welcomeStyles_1 = StyleSheet.create({
     buttonText: {
         color: "white",
         fontSize: 18,
-        fontWeight: "bold",
+        fontFamily: SAIRA_STENCIL_ONE_REGULAR,
+        letterSpacing: 4,
     },
 });
