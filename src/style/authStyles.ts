@@ -134,7 +134,7 @@ export const authStyles = StyleSheet.create({
     footerContainer: {
         marginTop: "auto",
         paddingTop: 30,
-        paddingBottom: 20,
+        paddingBottom: 50,
         paddingHorizontal: 20,
         flexDirection: "column",
         alignItems: "center",

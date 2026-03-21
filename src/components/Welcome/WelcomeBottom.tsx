@@ -3,13 +3,13 @@ import { View, Text, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { welcomeStyles_1 } from "../../style/welcomeStyles_1";
 import ProgressDots from "./ProgressDots";
-
 type Props = {
     text: string;
-    step: number;
-    total?: number;
     disabled?: boolean;
     onPress: () => void;
+    onSkip?: () => void; 
+    step: number;       
+    total?: number;
 };
 
 export default function WelcomeBottom({
@@ -18,36 +18,53 @@ export default function WelcomeBottom({
     total = 4,
     disabled = false,
     onPress,
+    onSkip,
 }: Props) {
     return (
         <View style={welcomeStyles_1.bottomContainer}>
+
+            {/* CONTINUE */}
             <Pressable
                 disabled={disabled}
-                style={[
+                onPress={onPress}
+                style={({ pressed }) => [
                     welcomeStyles_1.button,
                     disabled && { opacity: 0.4 },
+                    pressed && { opacity: 0.7 }, 
                 ]}
-                onPress={onPress}
             >
-                {({ pressed }) =>
-                    pressed ? (
-                        <View style={welcomeStyles_1.outlineButton}>
-                            <Text style={welcomeStyles_1.buttonText}>{text}</Text>
-                        </View>
-                    ) : (
-                        <LinearGradient
-                            colors={["#FF3C57", "#eb8196"]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={welcomeStyles_1.gradientButton}
-                        >
-                            <Text style={welcomeStyles_1.buttonText}>{text}</Text>
-                        </LinearGradient>
-                    )
-                }
+                <LinearGradient
+                    colors={["#FF3C57", "#eb8196"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={welcomeStyles_1.gradientButton}
+                >
+                    <Text style={welcomeStyles_1.buttonText}>
+                        {text} 
+                    </Text>
+                </LinearGradient>
             </Pressable>
 
-            <ProgressDots step={step} total={total} />
+            {/* SKIP */}
+            {onSkip && (
+                <Pressable
+                    onPress={onSkip}
+                    style={({ pressed }) => [
+                        welcomeStyles_1.button,
+                        { marginTop: 12 },
+                        pressed && { opacity: 0.6 },
+                    ]}
+                >
+                    <View style={welcomeStyles_1.outlineButton}>
+                        <Text style={welcomeStyles_1.buttonText}>
+                            Skip for now
+                        </Text>
+                    </View>
+                </Pressable>
+            )}
+            <View >
+                <ProgressDots step={step} total={total} />
+            </View>
         </View>
     );
 }

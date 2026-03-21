@@ -73,7 +73,8 @@ export default function Welcome_4({ onContinue }: any) {
 
             <WelcomeBottom
                 text="Continue"
-                step={3}
+                step={4}
+                total={4}
                 disabled={disabled}
                 onPress={handleContinue}
             />

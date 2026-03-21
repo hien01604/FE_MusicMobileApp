@@ -1,5 +1,5 @@
 import React from "react";
-import Layout from "../components/Layout";
+import Layout from "../components/Auth/AuthLayout";
 import LoginForm from "../components/Auth/LoginForm";
 import Logo from "../components/Logo";
 

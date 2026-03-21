@@ -7,6 +7,7 @@ import { welcomeStyles_1 } from "../../style/welcomeStyles_1";
 import WelcomeBottom from "./WelcomeBottom";
 import BackButton from "../BackButton";
 import useFadeSlideAnimation from "../../animations/useFadeSlideAnimation";
+import ProgressDots from "./ProgressDots";
 
 type Props = {
     onContinue: () => void;
@@ -84,13 +85,18 @@ export default function Welcome_2({ onContinue }: Props) {
                     </View>
                 </View>
 
-                {/* BOTTOM */}
-                <WelcomeBottom
-                    text="Continue"
+           
+
+                    <WelcomeBottom
+                        text="Continue"
+                        disabled={disabled}
+                        onPress={handleContinue}
+                    onSkip={onContinue} 
                     step={2}
-                    disabled={disabled}
-                    onPress={handleContinue}
-                />
+                    total={4}
+                    />
+
+
             </View>
         </Animated.View>
     );

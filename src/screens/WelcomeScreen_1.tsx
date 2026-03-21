@@ -18,10 +18,13 @@ export default function WelcomeScreen_1() {
     const handleStart = () => {
         navigation.navigate("Welcome_2");
     };
+    const onLogin = () => {
+        navigation.navigate("Login");
+    };
 
     return (
         <WelcomeLayout>
-            <WelcomeComponent onStart={handleStart} />
+            <WelcomeComponent onStart={handleStart} onLogin={onLogin} />
         </WelcomeLayout>
     );
 }

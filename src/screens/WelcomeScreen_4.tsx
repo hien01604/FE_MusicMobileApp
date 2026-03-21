@@ -16,7 +16,7 @@ export default function WelcomeScreen_4() {
     const navigation = useNavigation<NavigationProp>();
 
     const handleContinue = () => {
-        navigation.navigate("Login"); // hoặc screen tiếp theo
+        navigation.navigate("SignUp"); 
     };
 
     return (

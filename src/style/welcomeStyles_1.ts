@@ -37,7 +37,7 @@ export const welcomeStyles_1 = StyleSheet.create({
 
     bottomContainer: {
         position: "absolute",
-        bottom: 40,
+        bottom: 120,
         left: 30,
         right: 30,
         alignItems: "center",
@@ -70,4 +70,12 @@ export const welcomeStyles_1 = StyleSheet.create({
         fontFamily: SAIRA_STENCIL_ONE_REGULAR,
         letterSpacing: 4,
     },
+    footerText: {
+        textAlign: "center",
+        color: "#9CA3AF",
+        fontFamily: OPENSANS_REGULAR,
+        fontSize: 15,
+        paddingBottom: 70,
+    },
+    
 });

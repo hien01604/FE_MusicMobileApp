@@ -34,7 +34,7 @@ export default function LoginForm() {
 
     const handleLogin = async (): Promise<void> => {
         if (AUTH_UI_ONLY_MODE) {
-            navigation.navigate("Welcome_1");
+            navigation.navigate("Home");
             return;
         }
 

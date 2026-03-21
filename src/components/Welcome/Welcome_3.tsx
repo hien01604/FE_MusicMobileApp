@@ -80,9 +80,10 @@ export default function Welcome_3({ onContinue }: Props) {
                 {/* BOTTOM */}
                 <WelcomeBottom
                     text="Continue"
-                    step={3}
                     disabled={disabled}
                     onPress={handleContinue}
+                    step={3}
+                    total={4}
                 />
             </View>
         </Animated.View>

@@ -13,7 +13,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
     const handleLogout = async () => {
         await logout();
-        navigation.replace("Login");
+        navigation.replace("Welcome_1");
     };
 
     return (

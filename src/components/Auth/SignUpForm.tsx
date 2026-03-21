@@ -14,6 +14,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../navigation/type";
 import AuthFooter from "./AuthFooter";
 import { useAuth } from "../../hooks/useAuth";
+import { AUTH_UI_ONLY_MODE } from "../../../utils/const";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "SignUp">;
 
@@ -28,27 +29,46 @@ export default function SignupForm() {
     const [error, setError] = useState<string>("");
 
     const handleSignup = async (): Promise<void> => {
-        if (!username || !email || !password) {
-            setError("Please fill in all fields");
-            return;
-        }
+        // if (!username || !email || !password) {
+        //     setError("Please fill in all fields");
+        //     return;
+        // }
 
-        setLoading(true);
-        setError("");
+        // setLoading(true);
+        // setError("");
 
-        const result = await signup(username, email, password);
+        // const result = await signup(username, email, password);
 
-        setLoading(false);
+        // setLoading(false);
 
-        if (!result.success) {
-            setError(result.message);
-            return;
-        }
+        // if (!result.success) {
+        //     setError(result.message);
+        //     return;
+        // }
 
-        navigation.reset({
-            index: 0,
-            routes: [{ name: "Home" }],
-        });
+        // navigation.reset({
+        //     index: 0,
+        //     routes: [{ name: "Home" }],
+        // });
+        if (AUTH_UI_ONLY_MODE) {
+                    navigation.navigate("Login");
+                    return;
+                }
+        
+                if (!username || !email || !password) {
+                    setError("Please enter all fields");
+                    return;
+                }
+        
+                setLoading(true);
+                setError("");
+        
+                const result = await signup(username, email, password);
+                setLoading(false);
+        
+                if (!result.success) {
+                    setError(result.message);
+                }
     };
 
     const handleLoginRedirect = (): void => {

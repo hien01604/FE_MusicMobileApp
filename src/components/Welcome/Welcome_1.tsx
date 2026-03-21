@@ -1,17 +1,18 @@
 import React, { useEffect, useRef } from "react";
-import { View, Text, Image, Animated } from "react-native";
+import { View, Text, Image, Animated, TouchableOpacity } from "react-native";
 import { welcomeStyles_1 } from "../../style/welcomeStyles_1";
+import { authStyles } from "../../style/authStyles";
 import LogoImage from "../../../assets/logo.png";
 import WelcomeBottom from "./WelcomeBottom";
-import useFadeSlideAnimation from "../../animations/useFadeSlideAnimation";
+import useFadeSlideAnimation from "../../animations/useFadeSlideAnimation"; 
 
 type Props = {
     onStart: () => void;
+    onLogin: () => void;
 };
 
-export default function WelcomeComponent({ onStart }: Props) {
+export default function WelcomeComponent({ onStart, onLogin }: Props) {
     const { fadeAnim, translateY } = useFadeSlideAnimation();
-
 
     return (
         <Animated.View
@@ -42,10 +43,20 @@ export default function WelcomeComponent({ onStart }: Props) {
             {/* BOTTOM */}
             <WelcomeBottom
                 text="Get Started"
-                step={1}
                 onPress={onStart}
+                step={1}
+                total={4}
             />
+            {/* LOGIN LINK */}
+            <View style={authStyles.footerLinkContainer}>
+                <Text style={welcomeStyles_1.footerText}>
+                    Already have an account?
+                </Text>
 
+                <TouchableOpacity onPress={onLogin}>
+                    <Text style={authStyles.footerLink}>Login</Text>
+                </TouchableOpacity>
+            </View>
         </Animated.View>
     );
 }
