@@ -9,7 +9,8 @@ export const welcomeStyles_1 = StyleSheet.create({
     content: {
         flex: 1,
         alignItems: "center",
-        justifyContent: "center",
+        // justifyContent: "center",
+        marginTop: 120,
         paddingHorizontal: 30,
     },
 
@@ -37,7 +38,7 @@ export const welcomeStyles_1 = StyleSheet.create({
 
     bottomContainer: {
         position: "absolute",
-        bottom: 120,
+        bottom: 30,
         left: 30,
         right: 30,
         alignItems: "center",

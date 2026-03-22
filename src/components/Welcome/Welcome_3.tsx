@@ -82,6 +82,7 @@ export default function Welcome_3({ onContinue }: Props) {
                     text="Continue"
                     disabled={disabled}
                     onPress={handleContinue}
+                    onSkip={onContinue} 
                     step={3}
                     total={4}
                 />

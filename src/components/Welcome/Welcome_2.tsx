@@ -84,9 +84,6 @@ export default function Welcome_2({ onContinue }: Props) {
                         })}
                     </View>
                 </View>
-
-           
-
                     <WelcomeBottom
                         text="Continue"
                         disabled={disabled}
@@ -95,8 +92,6 @@ export default function Welcome_2({ onContinue }: Props) {
                     step={2}
                     total={4}
                     />
-
-
             </View>
         </Animated.View>
     );

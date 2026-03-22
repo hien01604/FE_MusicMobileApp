@@ -31,4 +31,5 @@ export const welcomeStyles_2 = StyleSheet.create({
     genreText: {
         color: "white",
     },
+    
 });

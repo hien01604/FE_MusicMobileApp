@@ -44,19 +44,11 @@ export default function WelcomeComponent({ onStart, onLogin }: Props) {
             <WelcomeBottom
                 text="Get Started"
                 onPress={onStart}
+                onSkip={onLogin}
                 step={1}
                 total={4}
             />
-            {/* LOGIN LINK */}
-            <View style={authStyles.footerLinkContainer}>
-                <Text style={welcomeStyles_1.footerText}>
-                    Already have an account?
-                </Text>
-
-                <TouchableOpacity onPress={onLogin}>
-                    <Text style={authStyles.footerLink}>Login</Text>
-                </TouchableOpacity>
-            </View>
+            
         </Animated.View>
     );
 }
