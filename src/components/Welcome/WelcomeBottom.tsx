@@ -28,29 +28,34 @@ export default function WelcomeBottom({
             {/* ===== STEP 1: SIGN IN / SIGN UP ===== */}
             {isFirstStep ? (
                 <>
-                    {/* SIGN UP */}
                     <Pressable
                         onPress={onPress}
-                        style={({ pressed }) => [
-                            welcomeStyles_1.button,
-                            pressed && { opacity: 0.7 },
-                        ]}
+                        style={welcomeStyles_1.button}
                     >
-                        <LinearGradient
-                            colors={["#FF3C57", "#eb8196"]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={welcomeStyles_1.gradientButton}
-                        >
-                            <Text style={welcomeStyles_1.buttonText}>
-                                Create Account
-                            </Text>
-                        </LinearGradient>
+                        {({ pressed }) =>
+                            pressed ? (
+                                <View style={welcomeStyles_1.outlineButton}>
+                                    <Text style={welcomeStyles_1.buttonText}>
+                                        Create Account
+                                    </Text>
+                                </View>
+                            ) : (
+                                <LinearGradient
+                                    colors={["#FF3C57", "#eb8196"]}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={welcomeStyles_1.gradientButton}
+                                >
+                                    <Text style={welcomeStyles_1.buttonText}>
+                                        Create Account
+                                    </Text>
+                                </LinearGradient>
+                            )
+                        }
                     </Pressable>
-
                     {/* SIGN IN */}
                     <Pressable
-                        onPress={onSkip} // 👈 dùng onSkip làm login
+                        onPress={onSkip} 
                         style={({ pressed }) => [
                             welcomeStyles_1.button,
                             { marginTop: 12 },
@@ -66,27 +71,35 @@ export default function WelcomeBottom({
                 </>
             ) : (
                 <>
-                    {/* ===== STEP 2-4: CONTINUE ===== */}
-                    <Pressable
-                        disabled={disabled}
-                        onPress={onPress}
-                        style={({ pressed }) => [
-                            welcomeStyles_1.button,
-                            disabled && { opacity: 0.4 },
-                            pressed && { opacity: 0.7 },
-                        ]}
-                    >
-                        <LinearGradient
-                            colors={["#FF3C57", "#eb8196"]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={welcomeStyles_1.gradientButton}
+                        <Pressable
+                            disabled={disabled}
+                            onPress={onPress}
+                            style={welcomeStyles_1.button}
                         >
-                            <Text style={welcomeStyles_1.buttonText}>
-                                {text || "Continue"}
-                            </Text>
-                        </LinearGradient>
-                    </Pressable>
+                            {({ pressed }) =>
+                                pressed && !disabled ? (
+                                    <View style={welcomeStyles_1.outlineButton}>
+                                        <Text style={welcomeStyles_1.buttonText}>
+                                            {text || "Continue"}
+                                        </Text>
+                                    </View>
+                                ) : (
+                                    <LinearGradient
+                                        colors={["#FF3C57", "#eb8196"]}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 0 }}
+                                        style={[
+                                            welcomeStyles_1.gradientButton,
+                                            disabled && { opacity: 0.4 },
+                                        ]}
+                                    >
+                                        <Text style={welcomeStyles_1.buttonText}>
+                                            {text || "Continue"}
+                                        </Text>
+                                    </LinearGradient>
+                                )
+                            }
+                        </Pressable>
 
                     {/* SKIP */}
                     {onSkip && (

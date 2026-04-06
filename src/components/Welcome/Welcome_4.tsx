@@ -71,13 +71,15 @@ export default function Welcome_4({ onContinue }: any) {
                 toggleArtist={toggleArtist}
             />
 
-            <WelcomeBottom
-                text="Continue"
-                step={4}
-                total={4}
-                disabled={disabled}
-                onPress={handleContinue}
-            />
+            {/* BOTTOM */}
+                <WelcomeBottom
+                    text="Continue"
+                    disabled={disabled}
+                    onPress={handleContinue}
+                    onSkip={onContinue} 
+                    step={3}
+                    total={4}
+                            />
             </View>
         </Animated.View>
     )
