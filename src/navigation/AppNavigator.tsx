@@ -11,6 +11,8 @@ import WelcomeScreen_1 from "../screens/WelcomeScreen_1";
 import WelcomeScreen_2 from "../screens/WelcomeScreen_2";
 import WelcomeScreen_3 from "../screens/WelcomeScreen_3";
 import WelcomeScreen_4 from "../screens/WelcomeScreen_4";
+import ProfileScreen from "../screens/ProfileScreen";
+import SearchScreen from "../screens/SearchScreen";
 
 import { useAuth } from "../hooks/useAuth";
 import type { RootStackParamList } from "./type";
@@ -54,6 +56,8 @@ export default function AppNavigator() {
                         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
 
                         <Stack.Screen name="Home" component={HomeScreen} />
+                        <Stack.Screen name="Profile" component={ProfileScreen} />
+                        <Stack.Screen name="Search" component={SearchScreen} />
                     </>
                 ) : (
                     <Stack.Screen name="Home" component={HomeScreen} />

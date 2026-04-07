@@ -1,73 +1,88 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useAuth } from "../hooks/useAuth";
-import type { StackNavigation } from "../navigation/type";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
 
-interface HomeScreenProps {
-    navigation: StackNavigation<"Home">;
-}
+import { HeaderTab, HeaderTabs } from '../components/HeaderTabs';
+import Layout from '../components/Layout';
+import { HomeTab } from './HomeTab';
+import { RadioTab } from './RadioTab';
+import { ProfileTab } from './ProfileTab';
+import { SearchTab } from './SearchTab';
 
-export default function HomeScreen({ navigation }: HomeScreenProps) {
-    const { user, logout } = useAuth();
+const TAB_COMPONENTS: Record<HeaderTab, React.ComponentType> = {
+    Radio: RadioTab,
+    Home: HomeTab,
+    Profile: ProfileTab,
+    Search: SearchTab,
+};
 
-    const handleLogout = async () => {
-        await logout();
-        navigation.replace("Welcome_1");
-    };
+const HomeScreen = () => {
+    const [activeTab, setActiveTab] = useState<HeaderTab>('Home');
+    const fadeAnim = useRef(new Animated.Value(1)).current;
+    const slideAnim = useRef(new Animated.Value(0)).current;
+
+    const handleTabPress = useCallback(
+        (tab: HeaderTab) => {
+            if (tab !== activeTab) {
+                setActiveTab(tab);
+            }
+        },
+        [activeTab]
+    );
+
+    const ActiveTabComponent = useMemo(() => TAB_COMPONENTS[activeTab], [activeTab]);
+
+    useEffect(() => {
+        fadeAnim.setValue(0.3);
+        slideAnim.setValue(8);
+
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 180,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 180,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, [activeTab, fadeAnim, slideAnim]);
 
     return (
-        <LinearGradient
-            colors={["#1a1a2e", "#0f3460", "#16213e"]}
-            style={styles.container}
-        >
-            <View style={styles.content}>
-                <Text style={styles.title}>Welcome to Music App</Text>
-                <Text style={styles.subtitle}>
-                    Hello, {user?.username || user?.email}!
-                </Text>
+        <Layout>
+            <View style={styles.container}>
+                <View style={styles.headerContainer}>
+                    <HeaderTabs activeTab={activeTab} onTabPress={handleTabPress} />
+                </View>
 
-                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                    <Text style={styles.logoutButtonText}>Logout</Text>
-                </TouchableOpacity>
+                <Animated.View
+                    key={activeTab}
+                    style={[
+                        styles.contentContainer,
+                        {
+                            opacity: fadeAnim,
+                            transform: [{ translateY: slideAnim }],
+                        },
+                    ]}
+                >
+                    <ActiveTabComponent />
+                </Animated.View>
             </View>
-        </LinearGradient>
+        </Layout>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    content: {
+    headerContainer: {
+        zIndex: 5,
+    },
+    contentContainer: {
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        paddingHorizontal: 20,
-    },
-    title: {
-        fontSize: 32,
-        fontWeight: "bold",
-        color: "#fff",
-        marginBottom: 10,
-        textAlign: "center",
-    },
-    subtitle: {
-        fontSize: 18,
-        color: "#aaa",
-        marginBottom: 40,
-        textAlign: "center",
-    },
-    logoutButton: {
-        backgroundColor: "#e94560",
-        paddingVertical: 12,
-        paddingHorizontal: 40,
-        borderRadius: 25,
-        marginTop: 20,
-    },
-    logoutButtonText: {
-        color: "#fff",
-        fontSize: 16,
-        fontWeight: "600",
     },
 });
+
+export default HomeScreen;
