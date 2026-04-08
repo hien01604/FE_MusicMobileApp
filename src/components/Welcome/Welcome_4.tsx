@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react"
-import { View, Text, Animated,  } from "react-native"
+import { View, Text, Animated, } from "react-native"
 import { useNavigation } from "@react-navigation/native";
 
 import ArtistGrid from "../Artist/ArtistGrid"
-import SearchBar from "../SearchBar"
+import SearchBar from "../common/SearchBar"
 
 import { Artist } from "../../types/artist.types"
 import { getArtists } from "../../service/artist.service"
 import { welcomeStyles_1 } from "../../style/welcomeStyles_1"
-import BackButton from "../BackButton"
+import BackButton from "../common/BackButton"
 import WelcomeBottom from "./WelcomeBottom"
 import useFadeSlideAnimation from "../../animations/useFadeSlideAnimation";
 
 export default function Welcome_4({ onContinue }: any) {
     const navigation = useNavigation();
-    
+
     const [artists, setArtists] = useState<Artist[]>([])
     const [search, setSearch] = useState("")
     const [selected, setSelected] = useState<string[]>([])
@@ -46,40 +46,40 @@ export default function Welcome_4({ onContinue }: any) {
 
     return (
         <Animated.View
-                    style={{
-                        flex: 1,
-                        opacity: fadeAnim,
-                        transform: [{ translateY }],
-                    }}
-                >
-        <View style={welcomeStyles_1.container}>
-            <BackButton onBack={navigation.goBack} />
-            
-            <Text style={welcomeStyles_1.heading}>
-                Pick some artist you like
-            </Text>
+            style={{
+                flex: 1,
+                opacity: fadeAnim,
+                transform: [{ translateY }],
+            }}
+        >
+            <View style={welcomeStyles_1.container}>
+                <BackButton onBack={navigation.goBack} />
 
-            <SearchBar
-                value={search}
-                onChange={setSearch}
-                placeholder="Search for songs, artists, playlists..."
-            />
+                <Text style={welcomeStyles_1.heading}>
+                    Pick some artist you like
+                </Text>
 
-            <ArtistGrid
-                artists={filteredArtists}
-                selected={selected}
-                toggleArtist={toggleArtist}
-            />
+                <SearchBar
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Search for songs, artists, playlists..."
+                />
 
-            {/* BOTTOM */}
+                <ArtistGrid
+                    artists={filteredArtists}
+                    selected={selected}
+                    toggleArtist={toggleArtist}
+                />
+
+                {/* BOTTOM */}
                 <WelcomeBottom
                     text="Continue"
                     disabled={disabled}
                     onPress={handleContinue}
-                    onSkip={onContinue} 
+                    onSkip={onContinue}
                     step={3}
                     total={4}
-                            />
+                />
             </View>
         </Animated.View>
     )

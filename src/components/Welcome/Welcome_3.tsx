@@ -5,7 +5,7 @@ import { welcomeStyles_3 } from "../../style/welcomeStyles_3";
 import { welcomeStyles_1 } from "../../style/welcomeStyles_1";
 import MoodCard from "./MoodCard";
 import WelcomeBottom from "./WelcomeBottom";
-import BackButton from "../BackButton";
+import BackButton from "../common/BackButton";
 import useFadeSlideAnimation from "../../animations/useFadeSlideAnimation";
 
 type Props = {
@@ -52,7 +52,7 @@ export default function Welcome_3({ onContinue }: Props) {
             }}
         >
             <BackButton onBack={navigation.goBack} />
-            
+
             <View style={welcomeStyles_3.container}>
                 {/* CONTENT */}
                 <View style={welcomeStyles_3.content}>
@@ -82,7 +82,7 @@ export default function Welcome_3({ onContinue }: Props) {
                     text="Continue"
                     disabled={disabled}
                     onPress={handleContinue}
-                    onSkip={onContinue} 
+                    onSkip={onContinue}
                     step={3}
                     total={4}
                 />
@@ -90,4 +90,3 @@ export default function Welcome_3({ onContinue }: Props) {
         </Animated.View>
     );
 }
-                    

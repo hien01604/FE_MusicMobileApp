@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 
-import { HeaderTab, HeaderTabs } from '../components/HeaderTabs';
-import Layout from '../components/Layout';
-import { HomeTab } from './HomeTab';
+import { HeaderTab, HeaderTabs } from '../../components/common/HeaderTabs';
+import Layout from '../../components/common/Layout';
+import { HomeTab } from '../Home/HomeTab';
 import { RadioTab } from './RadioTab';
 import { ProfileTab } from './ProfileTab';
-import { SearchTab } from './SearchTab';
+import { SearchTab } from '../Home/SearchTab';
 
 const TAB_COMPONENTS: Record<HeaderTab, React.ComponentType> = {
     Radio: RadioTab,

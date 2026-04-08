@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     },
     tab: {
         paddingVertical: 8,
-        paddingHorizontal: 30,
+        paddingHorizontal: 28,
         borderRadius: 20
     },
     activeTab: {

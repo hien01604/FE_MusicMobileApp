@@ -1,11 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
-interface Props {
-    title: string;
-}
-
-export const SectionHeader = ({ title }: Props) => (
+export const SectionHeader = ({ title }: { title: string }) => (
     <View style={styles.container}>
         <Text style={styles.title}>{title}</Text>
         <TouchableOpacity>
@@ -15,7 +11,12 @@ export const SectionHeader = ({ title }: Props) => (
 );
 
 const styles = StyleSheet.create({
-    container: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 15 },
+    container: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
     title: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
     seeAll: { color: '#ff4d6d', fontSize: 14 },
 });

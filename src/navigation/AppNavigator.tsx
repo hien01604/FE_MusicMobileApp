@@ -2,17 +2,17 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import SplashScreen from "../screens/SplashScreen";
-import LoginScreen from "../screens/LoginScreen";
-import SignUpScreen from "../screens/SignUpScreen";
-import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
-import HomeScreen from "../screens/HomeScreen";
-import WelcomeScreen_1 from "../screens/WelcomeScreen_1";
-import WelcomeScreen_2 from "../screens/WelcomeScreen_2";
-import WelcomeScreen_3 from "../screens/WelcomeScreen_3";
-import WelcomeScreen_4 from "../screens/WelcomeScreen_4";
-import ProfileScreen from "../screens/ProfileScreen";
-import SearchScreen from "../screens/SearchScreen";
+import SplashScreen from "../screens/Loading/SplashScreen";
+import LoginScreen from "../screens/Auth/LoginScreen";
+import SignUpScreen from "../screens/Auth/SignUpScreen";
+import ForgotPasswordScreen from "../screens/Auth/ForgotPasswordScreen";
+import HomeScreen from "../screens/Home/HomeScreen";
+import WelcomeScreen_1 from "../screens/Welcome/WelcomeScreen_1";
+import WelcomeScreen_2 from "../screens/Welcome/WelcomeScreen_2";
+import WelcomeScreen_3 from "../screens/Welcome/WelcomeScreen_3";
+import WelcomeScreen_4 from "../screens/Welcome/WelcomeScreen_4";
+import { ProfileTab } from "../screens/Home/ProfileTab";
+import { SearchTab } from "../screens/Home/SearchTab";
 
 import { useAuth } from "../hooks/useAuth";
 import type { RootStackParamList } from "./type";
@@ -56,8 +56,8 @@ export default function AppNavigator() {
                         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
 
                         <Stack.Screen name="Home" component={HomeScreen} />
-                        <Stack.Screen name="Profile" component={ProfileScreen} />
-                        <Stack.Screen name="Search" component={SearchScreen} />
+                        <Stack.Screen name="Profile" component={ProfileTab} />
+                        <Stack.Screen name="Search" component={SearchTab} />
                     </>
                 ) : (
                     <Stack.Screen name="Home" component={HomeScreen} />

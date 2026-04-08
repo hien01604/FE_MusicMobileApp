@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
-import LogoImage from "../../assets/logo.png";
-import { SAIRA_STENCIL_ONE_REGULAR } from "../../utils/const";
+import LogoImage from "../../../assets/logo.png";
+import { SAIRA_STENCIL_ONE_REGULAR } from "../../../utils/const";
 
 
 export default function Logo() {
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     logoText: {
         color: "white",
         fontSize: 12,
-        fontFamily: SAIRA_STENCIL_ONE_REGULAR,  
+        fontFamily: SAIRA_STENCIL_ONE_REGULAR,
         letterSpacing: 4,
         left: 10
     },

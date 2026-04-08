@@ -15,7 +15,7 @@ type LayoutProps = {
 export default function Layout({ children }: LayoutProps) {
     return (
         <ImageBackground
-            source={require("../../assets/bg/bg.png")}
+            source={require("../../../assets/bg/bg.png")}
             style={styles.background}
             resizeMode="cover"
         >

@@ -1,5 +1,5 @@
 import { View, Text, Image } from "react-native";
-import { Artist } from "../../src/types";
+import { Artist } from "../../types";
 
 interface Props {
     item: Artist;

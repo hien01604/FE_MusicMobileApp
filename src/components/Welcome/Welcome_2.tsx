@@ -5,7 +5,7 @@ import { welcomeStyles_2 } from "../../style/welcomeStyles_2";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { welcomeStyles_1 } from "../../style/welcomeStyles_1";
 import WelcomeBottom from "./WelcomeBottom";
-import BackButton from "../BackButton";
+import BackButton from "../common/BackButton";
 import useFadeSlideAnimation from "../../animations/useFadeSlideAnimation";
 import ProgressDots from "./ProgressDots";
 
@@ -84,14 +84,14 @@ export default function Welcome_2({ onContinue }: Props) {
                         })}
                     </View>
                 </View>
-                    <WelcomeBottom
-                        text="Continue"
-                        disabled={disabled}
-                        onPress={handleContinue}
-                    onSkip={onContinue} 
+                <WelcomeBottom
+                    text="Continue"
+                    disabled={disabled}
+                    onPress={handleContinue}
+                    onSkip={onContinue}
                     step={2}
                     total={4}
-                    />
+                />
             </View>
         </Animated.View>
     );

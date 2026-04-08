@@ -1,6 +1,6 @@
 import React, { memo, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import SearchBar from '../components/SearchBar';
+import SearchBar from '../../components/common/SearchBar';
 
 type SearchItem = {
     id: string;

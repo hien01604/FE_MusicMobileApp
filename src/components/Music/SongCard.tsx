@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { Song } from '../../src/types/index';
+import { Song } from '../../types/index';
 
 interface Props {
     item: Song;

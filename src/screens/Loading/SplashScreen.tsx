@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Animated, ActivityIndicator, ImageBackground } from "react-native";
 import { useEffect, useRef, useState } from "react";
-import { SAIRA_STENCIL_ONE_REGULAR } from "../../utils/const";
+import { SAIRA_STENCIL_ONE_REGULAR } from "../../../utils/const";
 import { LinearGradient } from "expo-linear-gradient";
 
 interface SplashScreenProps {
@@ -59,9 +59,9 @@ export default function SplashScreen({ showLoadingText = false, onFinish }: Spla
 
     return (
         <ImageBackground
-                    source={require("../../assets/bg/welcome-bg.png")}
-                    style={styles.background}
-                    resizeMode="cover"
+            source={require("../../../assets/bg/welcome-bg.png")}
+            style={styles.background}
+            resizeMode="cover"
         >
             <LinearGradient
                 colors={[
@@ -71,30 +71,30 @@ export default function SplashScreen({ showLoadingText = false, onFinish }: Spla
                 ]}
                 style={StyleSheet.absoluteFill}
             />
-        <View style={styles.container}>
+            <View style={styles.container}>
 
-            <Animated.Image
-                source={require("../../assets/logo.png")}
-                style={[
-                    styles.logo,
-                    {
-                        opacity: logoOpacity,
-                        transform: [{ scale: logoScale }],
-                    },
-                ]}
-                resizeMode="contain"
-            />
+                <Animated.Image
+                    source={require("../../../assets/logo.png")}
+                    style={[
+                        styles.logo,
+                        {
+                            opacity: logoOpacity,
+                            transform: [{ scale: logoScale }],
+                        },
+                    ]}
+                    resizeMode="contain"
+                />
 
-            <Text style={styles.brand}>{displayedText}</Text>
+                <Text style={styles.brand}>{displayedText}</Text>
 
-            {(showLoadingText || showLoading) && (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color="#ffffff" />
-                    <Text style={styles.loadingText}>
-                        Checking authentication...
-                    </Text>
-                </View>
-            )}
+                {(showLoadingText || showLoading) && (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="small" color="#ffffff" />
+                        <Text style={styles.loadingText}>
+                            Checking authentication...
+                        </Text>
+                    </View>
+                )}
             </View>
         </ImageBackground>
     );
