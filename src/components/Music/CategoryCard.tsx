@@ -1,26 +1,29 @@
 import React from 'react';
 import { Text, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
-interface Props {
-    title: string;
-    icon: string; 
-    color: string; 
-}
-
-// src/components/Music/CategoryCard.tsx
-
-export const CategoryCard = ({ title, icon, color }: Props) => {
+export const CategoryCard = ({ title, icon }: any) => {
     return (
-        <TouchableOpacity style={[styles.card, { backgroundColor: color }]}>
-            <View style={styles.content}>
-                <MaterialIcons name={icon as any} size={22} color="#fff" />
+        <TouchableOpacity style={styles.card} activeOpacity={0.8}>
+            <LinearGradient
+                colors={['#4c3fa2', '#2a215c']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.iconWrapper}
+            >
+
+                <View style={styles.iconGlow}>
+                    <MaterialIcons name={icon} size={22} color="#fff" />
+                </View>
+            </LinearGradient>
+
+            <View style={styles.textSection}>
                 <Text
                     style={styles.text}
                     numberOfLines={1}
-                    // Tự động thu nhỏ cỡ chữ nếu text quá dài
-                    adjustsFontSizeToFit={true}
-                    minimumFontScale={0.75}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.85}
                 >
                     {title}
                 </Text>
@@ -32,27 +35,42 @@ export const CategoryCard = ({ title, icon, color }: Props) => {
 const styles = StyleSheet.create({
     card: {
         width: '48.5%',
-        height: 60,
-        borderRadius: 12,
-        marginTop: 12,
-        overflow: 'hidden',
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-    },
-    content: {
-        flex: 1,
+        height: 62,
+        borderRadius: 16,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 12, // Giảm nhẹ padding để Text có thêm không gian
+        overflow: 'hidden',
+        marginBottom: 14,
+        borderWidth: 1,
+        backgroundColor: 'rgba(36, 36, 43, 0.7)',    },
+    iconWrapper: {
+        width: 54,
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderBottomRightRadius: 20,
+        position: 'relative', 
+    },
+    
+    iconGlow: {
+        zIndex: 2, 
+        shadowColor: "#fff",
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.3, 
+        shadowRadius: 10,
+        elevation: 5, 
+    },
+    textSection: {
+        flex: 1,
+        paddingLeft: 10,
+        paddingRight: 8,
+        justifyContent: 'center',
     },
     text: {
-        color: '#fff',
-        marginLeft: 8, // Giảm khoảng cách icon-text một chút
+        color: '#F2F2F2',
+        fontSize: 13,
         fontWeight: '600',
-        fontSize: 14,
-        flex: 1, // Ép text chiếm toàn bộ không gian còn lại để tự thu nhỏ
+        letterSpacing: 0.5,
+        textTransform: 'capitalize',
     },
 });

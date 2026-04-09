@@ -34,7 +34,6 @@ const styles = StyleSheet.create({
     headerTabs: {
         flexDirection: 'row',
         justifyContent: 'center',
-        paddingHorizontal: 10,
         paddingBottom: 10,
     },
     tab: {

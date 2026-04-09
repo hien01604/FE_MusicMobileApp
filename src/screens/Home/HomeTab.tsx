@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View, StatusBar } from 'react-native';
 import { categories, songs } from '../../data/mockData';
 import { CategoryCard } from '../../components/Music/CategoryCard';
 import { SectionHeader } from '../../components/Music/SectionHeader';
@@ -11,21 +11,24 @@ export const HomeTab = () => {
         <ScrollView
             style={styles.container}
             showsVerticalScrollIndicator={false}
+            // Thêm padding dưới để không bị che khuất bởi trình điều khiển nhạc (nếu có)
             contentContainerStyle={styles.contentBottom}
         >
-            {/* 1. Grid Danh mục (Liked, Playlists,...) */}
+            {/* Đảm bảo StatusBar hòa hợp với tone tối */}
+            <StatusBar barStyle="light-content" />
+
+            {/* 1. Grid Danh mục: Sử dụng gap để tạo khoảng cách đều giữa các card */}
             <View style={styles.grid}>
                 {categories.map((item) => (
                     <CategoryCard
                         key={item.id}
                         title={item.title}
                         icon={item.icon}
-                        color={item.color}
                     />
                 ))}
             </View>
 
-            {/* 2. Section: New Songs */}
+            {/* 2. Các Section bài hát */}
             <View style={styles.section}>
                 <SectionHeader title="New Songs" onSeeAll={() => { }} />
                 <HorizontalList
@@ -34,7 +37,6 @@ export const HomeTab = () => {
                 />
             </View>
 
-            {/* 3. Section: Recommended for you */}
             <View style={styles.section}>
                 <SectionHeader title="Recommended for you" onSeeAll={() => { }} />
                 <HorizontalList
@@ -43,7 +45,6 @@ export const HomeTab = () => {
                 />
             </View>
 
-            {/* 4. Section: Popular Artist */}
             <View style={styles.section}>
                 <SectionHeader title="Popular Artist" onSeeAll={() => { }} />
                 <HorizontalList
@@ -55,25 +56,21 @@ export const HomeTab = () => {
     );
 };
 
-// src/screens/main/HomeTab.tsx
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        // Đảm bảo con số này khớp hoàn toàn với lề của HeaderBar phía trên
-        paddingHorizontal: 10,
+        
     },
     grid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        // space-between sẽ đẩy 2 card ra sát 2 mép của paddingHorizontal: 16
         justifyContent: 'space-between',
-        marginTop: 4, 
+        marginTop: 20,
     },
     section: {
-        marginTop: 25,
+        marginTop: 30, 
     },
     contentBottom: {
-        paddingBottom: 100,
+        paddingBottom: 120,
     },
 });

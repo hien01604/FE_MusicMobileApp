@@ -1,10 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
-export const SectionHeader = ({ title }: { title: string }) => (
+interface SectionHeaderProps {
+    title: string;
+    // Thêm dòng này vào: nó là một hàm không nhận tham số và không trả về giá trị
+    onSeeAll?: () => void;
+}
+export const SectionHeader = ({ title, onSeeAll }: SectionHeaderProps) => (
     <View style={styles.container}>
         <Text style={styles.title}>{title}</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={onSeeAll}>
             <Text style={styles.seeAll}>See all</Text>
         </TouchableOpacity>
     </View>

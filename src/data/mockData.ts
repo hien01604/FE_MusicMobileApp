@@ -5,25 +5,22 @@ export const categories = [
         id: '1',
         title: 'Liked Songs',
         icon: 'favorite',
-        color: '#6351ce' // Màu tím đậm
     },
     {
         id: '2',
         title: 'My Playlists',
         icon: 'library-music',
-        color: '#3e4a89' // Màu xanh đậm
     },
     {
         id: '3',
-        title: 'Recently Played',
+        title: 'Recently',
         icon: 'history',
-        color: '#7c3a6b' // Màu tím hồng
     },
     {
         id: '4',
         title: 'Trending',
         icon: 'whatshot',
-        color: '#b25d38' // Màu cam đất
+
     },
 ];
 
