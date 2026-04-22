@@ -1,55 +1,236 @@
-import React from 'react';
-import { ScrollView, StyleSheet, View, StatusBar } from 'react-native';
-import { categories, songs } from '../../data/mockData';
+import React, { useCallback, useMemo } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { artists, songs } from '../../data/mockData';
+import {
+    listeningHistory,
+    newReleases,
+    quickActions,
+    trendingSongs,
+} from '../../data/homeData';
+import { Artist, Category, Song } from '../../types';
 import { CategoryCard } from '../../components/Music/CategoryCard';
 import { SectionHeader } from '../../components/Music/SectionHeader';
 import HorizontalList from '../../components/Music/HorizontalList';
 import { SongCard } from '../../components/Music/SongCard';
+import ArtistCard from '../../components/Music/ArtistCard';
+
+const HOME_PREVIEW_LIMIT = 6;
 
 export const HomeTab = () => {
+    const hasHistory = listeningHistory.length > 0;
+
+    const continueListening = useMemo<Song[]>(
+        () =>
+            listeningHistory.filter((item) => item.progress < 0.7)
+                .sort(
+                    (a, b) =>
+                        new Date(b.lastListenedAt).getTime() -
+                        new Date(a.lastListenedAt).getTime()
+                )
+                .map((item) => ({
+                    id: item.id,
+                    title: item.title,
+                    artist: item.artist,
+                    image: item.image,
+                })),
+        []
+    );
+
+    const recommendedSongs = useMemo<Song[]>(() => {
+        if (!hasHistory) {
+            return [];
+        }
+
+        const preferredArtists = new Set(
+            listeningHistory.map((item) => item.artist.toLowerCase())
+        );
+        const preferredGenres = new Set(
+            listeningHistory.map((item) => item.genre.toLowerCase())
+        );
+        const preferredMoods = new Set(
+            listeningHistory.map((item) => item.mood.toLowerCase())
+        );
+
+        const artistHintBySongId: Record<string, string> = {
+            'release-2': 'Electronic',
+            'release-3': 'Chill',
+            'release-4': 'Focus',
+        };
+
+        const allCandidates = [...newReleases, ...songs].filter(
+            (song, index, array) =>
+                array.findIndex((candidate) => candidate.id === song.id) === index
+        );
+
+        return allCandidates
+            .map((song) => {
+                let score = 0;
+                const artist = song.artist.toLowerCase();
+                const behaviorHint = (artistHintBySongId[song.id] || '').toLowerCase();
+
+                if (preferredArtists.has(artist)) {
+                    score += 3;
+                }
+
+                if (preferredGenres.has(behaviorHint)) {
+                    score += 2;
+                }
+
+                if (preferredMoods.has(behaviorHint)) {
+                    score += 2;
+                }
+
+                return { song, score };
+            })
+            .sort((a, b) => b.score - a.score)
+            .map((entry) => entry.song);
+    }, [hasHistory]);
+
+    const previewContinueListening = useMemo(
+        () => continueListening.slice(0, HOME_PREVIEW_LIMIT),
+        [continueListening]
+    );
+
+    const previewRecommendedSongs = useMemo(
+        () => recommendedSongs.slice(0, HOME_PREVIEW_LIMIT),
+        [recommendedSongs]
+    );
+
+    const previewNewReleases = useMemo(
+        () => newReleases.slice(0, HOME_PREVIEW_LIMIT),
+        []
+    );
+
+    const previewTrendingSongs = useMemo(
+        () => trendingSongs.slice(0, HOME_PREVIEW_LIMIT),
+        []
+    );
+
+    const previewPopularArtists = useMemo(
+        () => artists.slice(0, HOME_PREVIEW_LIMIT),
+        []
+    );
+
+    const onSeeAll = useCallback((section: string, totalItems: number) => {
+        Alert.alert('See all', 'Open ' + section + ' (' + totalItems + ' items)');
+    }, []);
+
+    const onPlaySong = useCallback((song: Song) => {
+        Alert.alert('Play song', 'Play "' + song.title + '" by ' + song.artist);
+    }, []);
+
+    const onOpenArtist = useCallback((artist: Artist) => {
+        Alert.alert('Artist', 'Open ' + artist.name);
+    }, []);
+
+    const onQuickActionPress = useCallback((action: Category) => {
+        Alert.alert('Quick action', 'Open ' + action.title);
+    }, []);
+
+    const renderSongCard = useCallback(
+        ({ item }: { item: Song }) => (
+            <SongCard item={item} onPress={() => onPlaySong(item)} />
+        ),
+        [onPlaySong]
+    );
+
+    const renderArtistCard = useCallback(
+        ({ item }: { item: Artist }) => (
+            <ArtistCard item={item} onPress={() => onOpenArtist(item)} />
+        ),
+        [onOpenArtist]
+    );
+
     return (
         <ScrollView
             style={styles.container}
             showsVerticalScrollIndicator={false}
-            // Thêm padding dưới để không bị che khuất bởi trình điều khiển nhạc (nếu có)
             contentContainerStyle={styles.contentBottom}
         >
-            {/* Đảm bảo StatusBar hòa hợp với tone tối */}
-            <StatusBar barStyle="light-content" />
+            <View style={styles.section}>
+                <SectionHeader
+                    title="Quick Actions"
+                    onSeeAll={() => onSeeAll('Quick Actions', quickActions.length)}
+                />
+                <View style={styles.grid}>
+                    {quickActions.map((item) => (
+                        <CategoryCard
+                            key={item.id}
+                            title={item.title}
+                            icon={item.icon}
+                            onPress={() => onQuickActionPress(item)}
+                        />
+                    ))}
+                </View>
+            </View>
 
-            {/* 1. Grid Danh mục: Sử dụng gap để tạo khoảng cách đều giữa các card */}
-            <View style={styles.grid}>
-                {categories.map((item) => (
-                    <CategoryCard
-                        key={item.id}
-                        title={item.title}
-                        icon={item.icon}
+            {previewContinueListening.length > 0 && (
+                <View style={styles.section}>
+                    <SectionHeader
+                        title="Continue Listening"
+                        onSeeAll={() =>
+                            onSeeAll('Continue Listening', continueListening.length)
+                        }
                     />
-                ))}
-            </View>
+                    <HorizontalList
+                        data={previewContinueListening}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderSongCard}
+                    />
+                </View>
+            )}
 
-            {/* 2. Các Section bài hát */}
+            {hasHistory && (
+                <View style={styles.section}>
+                    <SectionHeader
+                        title="Recommended For You"
+                        onSeeAll={() =>
+                            onSeeAll('Recommended For You', recommendedSongs.length)
+                        }
+                    />
+                    <HorizontalList
+                        data={previewRecommendedSongs}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderSongCard}
+                    />
+                </View>
+            )}
+
             <View style={styles.section}>
-                <SectionHeader title="New Songs" onSeeAll={() => { }} />
+                <SectionHeader
+                    title="New Releases"
+                    onSeeAll={() => onSeeAll('New Releases', newReleases.length)}
+                />
                 <HorizontalList
-                    data={songs}
-                    renderItem={({ item }) => <SongCard item={item} />}
+                    data={previewNewReleases}
+                    keyExtractor={(item) => item.id}
+                    renderItem={renderSongCard}
                 />
             </View>
 
-            <View style={styles.section}>
-                <SectionHeader title="Recommended for you" onSeeAll={() => { }} />
-                <HorizontalList
-                    data={songs}
-                    renderItem={({ item }) => <SongCard item={item} />}
-                />
-            </View>
+            {!hasHistory && (
+                <View style={styles.section}>
+                    <SectionHeader
+                        title="Trending"
+                        onSeeAll={() => onSeeAll('Trending', trendingSongs.length)}
+                    />
+                    <HorizontalList
+                        data={previewTrendingSongs}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderSongCard}
+                    />
+                </View>
+            )}
 
             <View style={styles.section}>
-                <SectionHeader title="Popular Artist" onSeeAll={() => { }} />
+                <SectionHeader
+                    title="Popular Artists"
+                    onSeeAll={() => onSeeAll('Popular Artists', artists.length)}
+                />
                 <HorizontalList
-                    data={songs}
-                    renderItem={({ item }) => <SongCard item={item} />}
+                    data={previewPopularArtists}
+                    keyExtractor={(item) => item.id}
+                    renderItem={renderArtistCard}
                 />
             </View>
         </ScrollView>
@@ -59,18 +240,17 @@ export const HomeTab = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        
+    },
+    contentBottom: {
+        paddingBottom: 120,
+        paddingHorizontal: 4,
     },
     grid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        marginTop: 20,
     },
     section: {
-        marginTop: 30, 
-    },
-    contentBottom: {
-        paddingBottom: 120,
+        marginTop: 24,
     },
 });

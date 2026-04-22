@@ -4,10 +4,11 @@ import { Song } from '../../types/index';
 
 interface Props {
     item: Song;
+    onPress?: () => void;
 }
 
-export const SongCard = ({ item }: Props) => (
-    <TouchableOpacity style={styles.container}>
+export const SongCard = ({ item, onPress }: Props) => (
+    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.85}>
         <Image source={{ uri: item.image }} style={styles.image} />
         <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
         <Text style={styles.artist}>{item.artist}</Text>
