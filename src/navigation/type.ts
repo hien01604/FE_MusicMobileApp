@@ -1,5 +1,6 @@
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
+import type { SongListType } from "../data/songLibraryData";
 
 /* ================= ROOT STACK ================= */
 
@@ -13,9 +14,11 @@ export type RootStackParamList = {
     Welcome_3: undefined;
     Welcome_4: undefined;
     Home: undefined;
-    Radio: undefined;
+    Library: undefined;
     Profile: undefined;
     Search: undefined;
+    Player: undefined;
+    SongList: { title: string; type: SongListType };
 };
 
 /* ================= GENERIC HELPERS ================= */

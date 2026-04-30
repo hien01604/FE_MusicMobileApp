@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-export const HEADER_TABS = ['Radio', 'Home', 'Profile', 'Search'] as const;
+export const HEADER_TABS = ['Library', 'Home', 'Profile', 'Search'] as const;
 
 export type HeaderTab = (typeof HEADER_TABS)[number];
 

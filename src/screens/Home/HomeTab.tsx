@@ -1,5 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { artists, songs } from '../../data/mockData';
 import {
     listeningHistory,
@@ -13,10 +15,23 @@ import { SectionHeader } from '../../components/Music/SectionHeader';
 import HorizontalList from '../../components/Music/HorizontalList';
 import { SongCard } from '../../components/Music/SongCard';
 import ArtistCard from '../../components/Music/ArtistCard';
+import { usePlayerStore } from '../../store/playerStore';
+import type { RootStackParamList } from '../../navigation/type';
+
+type HomeNavigation = NativeStackNavigationProp<RootStackParamList>;
+
+type HomeTabProps = {
+    onOpenSongList?: (
+        title: string,
+        type: 'all' | 'new' | 'trending' | 'continueListening' | 'recommended'
+    ) => void;
+};
 
 const HOME_PREVIEW_LIMIT = 6;
 
-export const HomeTab = () => {
+export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
+    const navigation = useNavigation<HomeNavigation>();
+    const playSong = usePlayerStore((state) => state.playSong);
     const hasHistory = listeningHistory.length > 0;
 
     const continueListening = useMemo<Song[]>(
@@ -52,9 +67,9 @@ export const HomeTab = () => {
         );
 
         const artistHintBySongId: Record<string, string> = {
-            'release-2': 'Electronic',
-            'release-3': 'Chill',
-            'release-4': 'Focus',
+            'new-2': 'Electronic',
+            'new-3': 'Chill',
+            'new-5': 'Focus',
         };
 
         const allCandidates = [...newReleases, ...songs].filter(
@@ -111,13 +126,64 @@ export const HomeTab = () => {
         []
     );
 
-    const onSeeAll = useCallback((section: string, totalItems: number) => {
-        Alert.alert('See all', 'Open ' + section + ' (' + totalItems + ' items)');
-    }, []);
+    const openSongList = useCallback(
+        (
+            title: string,
+            type: 'all' | 'new' | 'trending' | 'continueListening' | 'recommended'
+        ) => {
+            if (onOpenSongList) {
+                onOpenSongList(title, type);
+                return;
+            }
+
+            navigation.navigate('SongList', {
+                title,
+                type,
+            });
+        },
+        [navigation, onOpenSongList]
+    );
+
+    const onSeeAll = useCallback(
+        (section: string, totalItems: number) => {
+            if (section === 'Quick Actions') {
+                openSongList(section, 'all');
+                return;
+            }
+
+            if (section === 'Continue Listening') {
+                openSongList(section, 'continueListening');
+                return;
+            }
+
+            if (section === 'Recommended For You') {
+                openSongList(section, 'recommended');
+                return;
+            }
+
+            if (section === 'New Releases') {
+                openSongList(section, 'new');
+                return;
+            }
+
+            if (section === 'Trending') {
+                openSongList(section, 'trending');
+                return;
+            }
+
+            if (section === 'Popular Artists') {
+                openSongList(section, 'all');
+                return;
+            }
+
+            Alert.alert('See all', 'Open ' + section + ' (' + totalItems + ' items)');
+        },
+        [openSongList]
+    );
 
     const onPlaySong = useCallback((song: Song) => {
-        Alert.alert('Play song', 'Play "' + song.title + '" by ' + song.artist);
-    }, []);
+        void playSong(song);
+    }, [playSong]);
 
     const onOpenArtist = useCallback((artist: Artist) => {
         Alert.alert('Artist', 'Open ' + artist.name);

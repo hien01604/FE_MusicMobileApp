@@ -1,4 +1,8 @@
 import { Category, Song } from '../types';
+import {
+    newSongs as libraryNewSongs,
+    trendingSongs as libraryTrendingSongs,
+} from './songLibraryData';
 
 export type ListeningHistoryItem = Song & {
     progress: number;
@@ -14,48 +18,9 @@ export const quickActions: Category[] = [
     { id: 'quick-daily-mix', title: 'Daily Mix', icon: 'auto-awesome' },
 ];
 
-export const newReleases: Song[] = [
-    {
-        id: 'song-1',
-        title: 'Urgent Siege',
-        artist: 'Damned Anthem',
-        image: 'https://picsum.photos/200',
-    },
-    {
-        id: 'release-2',
-        title: 'Neon Skyline',
-        artist: 'Pulse Theory',
-        image: 'https://picsum.photos/202',
-    },
-    {
-        id: 'release-3',
-        title: 'Summer Echo',
-        artist: 'Luma Tide',
-        image: 'https://picsum.photos/203',
-    },
-    {
-        id: 'release-4',
-        title: 'Afterglow Drive',
-        artist: 'Damned Anthem',
-        image: 'https://picsum.photos/204',
-    },
-];
+export const newReleases: Song[] = libraryNewSongs;
 
-export const trendingSongs: Song[] = [
-    ...newReleases,
-    {
-        id: 'trend-5',
-        title: 'Midnight Frequency',
-        artist: 'Aero Vox',
-        image: 'https://picsum.photos/205',
-    },
-    {
-        id: 'trend-6',
-        title: 'Runaway City',
-        artist: 'Sonic Harbor',
-        image: 'https://picsum.photos/206',
-    },
-];
+export const trendingSongs: Song[] = libraryTrendingSongs;
 
 export const listeningHistory: ListeningHistoryItem[] = [
     {

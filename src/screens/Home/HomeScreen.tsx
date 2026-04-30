@@ -4,12 +4,12 @@ import { Animated, StyleSheet, View } from 'react-native';
 import { HeaderTab, HeaderTabs } from '../../components/common/HeaderTabs';
 import Layout from '../../components/common/Layout';
 import { HomeTab } from '../Home/HomeTab';
-import { RadioTab } from './RadioTab';
+import { LibraryTab } from './LibraryTab';
 import { ProfileTab } from './ProfileTab';
 import { SearchTab } from '../Home/SearchTab';
 
 const TAB_COMPONENTS: Record<HeaderTab, React.ComponentType> = {
-    Radio: RadioTab,
+    Library: LibraryTab,
     Home: HomeTab,
     Profile: ProfileTab,
     Search: SearchTab,
