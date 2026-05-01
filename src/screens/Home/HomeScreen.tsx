@@ -11,8 +11,8 @@ import { SearchTab } from '../Home/SearchTab';
 const TAB_COMPONENTS: Record<HeaderTab, React.ComponentType> = {
     Library: LibraryTab,
     Home: HomeTab,
-    Profile: ProfileTab,
     Search: SearchTab,
+    Profile: ProfileTab,
 };
 
 const HomeScreen = () => {

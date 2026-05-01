@@ -50,10 +50,9 @@ export default function SignupForm() {
                 return;
             }
 
-            // 🔥 QUAN TRỌNG: chuyển màn sau khi signup thành công
             navigation.reset({
                 index: 0,
-                routes: [{ name: "Home" }],
+                routes: [{ name: "Login" }],
             });
 
         } catch (err: any) {
@@ -116,19 +115,31 @@ export default function SignupForm() {
             </View>
 
             {/* BUTTON */}
-            <Pressable onPress={handleSignup} disabled={loading}>
-                {loading ? (
-                    <View style={authStyles.gradientButton}>
-                        <ActivityIndicator color="white" />
-                    </View>
-                ) : (
-                    <LinearGradient
-                        colors={["#FF3C57", "#eb8196"]}
-                        style={authStyles.gradientButton}
-                    >
-                        <Text style={authStyles.buttonText}>Sign Up</Text>
-                    </LinearGradient>
-                )}
+            <Pressable
+                onPress={handleSignup}
+                style={authStyles.buttonWrapper}
+                disabled={loading || !username || !email || !password}
+            >
+                {({ pressed }) =>
+                    pressed && !loading ? (
+                        <View style={authStyles.outlineButton}>
+                            <Text style={authStyles.buttonText}>Sign Up</Text>
+                        </View>
+                    ) : (
+                        <LinearGradient
+                            colors={["#FF3C57", "#eb8196"]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={authStyles.gradientButton}
+                        >
+                            {loading ? (
+                                <ActivityIndicator size="small" color="white" />
+                            ) : (
+                                <Text style={authStyles.buttonText}>Sign Up</Text>
+                            )}
+                        </LinearGradient>
+                    )
+                }
             </Pressable>
 
             {error ? (
