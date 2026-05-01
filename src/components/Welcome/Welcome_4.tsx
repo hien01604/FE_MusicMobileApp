@@ -6,7 +6,7 @@ import ArtistGrid from "../Artist/ArtistGrid"
 import SearchBar from "../common/SearchBar"
 
 import { Artist } from "../../types/artist.types"
-import { getArtists } from "../../service/artist.service"
+import { getArtists } from "../../services/artist.service"
 import { welcomeStyles_1 } from "../../style/welcomeStyles_1"
 import BackButton from "../common/BackButton"
 import WelcomeBottom from "./WelcomeBottom"

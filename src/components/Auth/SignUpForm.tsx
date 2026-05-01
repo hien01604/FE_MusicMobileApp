@@ -13,65 +13,57 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../navigation/type";
 import AuthFooter from "./AuthFooter";
-import { useAuth } from "../../hooks/useAuth";
+import useAuth from "../../hooks/useAuth";
 import { AUTH_UI_ONLY_MODE } from "../../../utils/const";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "SignUp">;
 
 export default function SignupForm() {
     const navigation = useNavigation<NavigationProp>();
-    const { signup } = useAuth();
+    const { register } = useAuth();
 
-    const [username, setUsername] = useState<string>("");
-    const [email, setEmail] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
-    const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string>("");
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    const handleSignup = async (): Promise<void> => {
-        // if (!username || !email || !password) {
-        //     setError("Please fill in all fields");
-        //     return;
-        // }
-
-        // setLoading(true);
-        // setError("");
-
-        // const result = await signup(username, email, password);
-
-        // setLoading(false);
-
-        // if (!result.success) {
-        //     setError(result.message);
-        //     return;
-        // }
-
-        // navigation.reset({
-        //     index: 0,
-        //     routes: [{ name: "Home" }],
-        // });
+    const handleSignup = async () => {
         if (AUTH_UI_ONLY_MODE) {
-                    navigation.navigate("Login");
-                    return;
-                }
-        
-                if (!username || !email || !password) {
-                    setError("Please enter all fields");
-                    return;
-                }
-        
-                setLoading(true);
-                setError("");
-        
-                const result = await signup(username, email, password);
-                setLoading(false);
-        
-                if (!result.success) {
-                    setError(result.message);
-                }
+            navigation.navigate("Login");
+            return;
+        }
+
+        if (!username || !email || !password) {
+            setError("Please enter all fields");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            setError("");
+
+            const result = await register(username, email, password);
+
+            if (!result.success) {
+                setError(result.message || "Sign up failed");
+                return;
+            }
+
+            // 🔥 QUAN TRỌNG: chuyển màn sau khi signup thành công
+            navigation.reset({
+                index: 0,
+                routes: [{ name: "Home" }],
+            });
+
+        } catch (err: any) {
+            setError(err.message || "Something went wrong");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleLoginRedirect = (): void => {
+    const handleLoginRedirect = () => {
         navigation.navigate("Login");
     };
 
@@ -92,9 +84,7 @@ export default function SignupForm() {
                     placeholder="Enter your username"
                     placeholderTextColor="#ffffff"
                     style={authStyles.input}
-                    keyboardType="default"
                     autoCapitalize="none"
-                    underlineColorAndroid="transparent"
                 />
             </View>
 
@@ -109,7 +99,6 @@ export default function SignupForm() {
                     style={authStyles.input}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    underlineColorAndroid="transparent"
                 />
             </View>
 
@@ -123,35 +112,30 @@ export default function SignupForm() {
                     placeholderTextColor="#ffffff"
                     secureTextEntry
                     style={authStyles.input}
-                    underlineColorAndroid="transparent"
                 />
             </View>
 
-            {/* CONTINUE BUTTON */}
-            <Pressable onPress={handleSignup} style={authStyles.buttonWrapper} disabled={loading}>
-                {({ pressed }) =>
-                    pressed && !loading ? (
-                        <View style={authStyles.outlineButton}>
-                            <Text style={authStyles.buttonText}>Sign Up</Text>
-                        </View>
-                    ) : (
-                        <LinearGradient
-                            colors={["#FF3C57", "#eb8196"]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={authStyles.gradientButton}
-                        >
-                            {loading ? (
-                                <ActivityIndicator size="small" color="white" />
-                            ) : (
-                                <Text style={authStyles.buttonText}>Sign Up</Text>
-                            )}
-                        </LinearGradient>
-                    )
-                }
+            {/* BUTTON */}
+            <Pressable onPress={handleSignup} disabled={loading}>
+                {loading ? (
+                    <View style={authStyles.gradientButton}>
+                        <ActivityIndicator color="white" />
+                    </View>
+                ) : (
+                    <LinearGradient
+                        colors={["#FF3C57", "#eb8196"]}
+                        style={authStyles.gradientButton}
+                    >
+                        <Text style={authStyles.buttonText}>Sign Up</Text>
+                    </LinearGradient>
+                )}
             </Pressable>
 
-            {error && <Text style={{ color: "#FF3C57", textAlign: "center", marginTop: 10 }}>{error}</Text>}
+            {error ? (
+                <Text style={{ color: "#FF3C57", textAlign: "center", marginTop: 10 }}>
+                    {error}
+                </Text>
+            ) : null}
 
             <AuthFooter
                 footerText="Already have an account?"

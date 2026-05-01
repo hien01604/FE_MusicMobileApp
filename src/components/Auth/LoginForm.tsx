@@ -50,7 +50,7 @@ export default function LoginForm() {
         setLoading(false);
 
         if (!result.success) {
-            setError(result.message);
+            setError(result.message || "Login failed");
         }
     };
     const handleForgotPassword = (): void => {
@@ -67,7 +67,7 @@ export default function LoginForm() {
             contentContainerStyle={authStyles.scrollContent}
             keyboardShouldPersistTaps="handled"
         >
-            
+
             <Text style={authStyles.heading}>Welcome Back</Text>
             <Text style={authStyles.subHeading}>Sign in to continue your journey</Text>
 

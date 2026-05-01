@@ -14,7 +14,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import BackButton from '../../components/common/BackButton';
 import Layout from '../../components/common/Layout';
 import { SongListItem } from '../../components/Music/SongListItem';
-import { getSongsByType } from '../../service/song.service';
+import { getSongsByType } from '../../services/song.service';
 import type { Song } from '../../types';
 import type { RootStackParamList } from '../../navigation/type';
 import SearchBar from '../../components/common/SearchBar';
@@ -76,7 +76,7 @@ export function SongListView({ title, type, onBack }: SongListViewProps) {
 
     return (
         <Layout>
-           
+
             <View style={styles.container}>
                 {onBack ? <BackButton onBack={onBack} /> : null}
 

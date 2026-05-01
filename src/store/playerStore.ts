@@ -5,7 +5,7 @@ import {
     playWithTrackPlayer,
     resumeTrackPlayer,
     subscribeTrackPlayerState,
-} from '../service/trackPlayer.service';
+} from '../services/trackPlayer.service';
 
 type PlayerStore = {
     currentSong: Song | null;

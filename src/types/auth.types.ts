@@ -36,7 +36,7 @@ export interface LoginResponseData {
 export type LoginResponse = ApiResponse<LoginResponseData>;
 
 
-// ================= SIGNUP =================
+// ================= SIGNUP / REGISTER =================
 
 export interface SignupRequest {
     username: string;
@@ -47,6 +47,67 @@ export interface SignupRequest {
 export interface SignupResponseData {
     user: User;
     token: string;
+}
+
+// ================= AUTH RESPONSE (from NestJS) =================
+
+export interface RegisterDto {
+    username: string;
+    email: string;
+    password: string;
+}
+
+export interface LoginDto {
+    email: string;
+    password: string;
+}
+
+export interface GoogleLoginDto {
+    idToken: string;
+}
+
+export interface RefreshTokenDto {
+    refreshToken: string;
+}
+
+export interface ForgotPasswordDto {
+    email: string;
+}
+
+export interface ResetPasswordDto {
+    token: string;
+    newPassword: string;
+}
+
+export interface UpdateProfileDto {
+    username?: string;
+}
+
+export interface SetPreferencesDto {
+    artistIds: string[];
+    genreIds: string[];
+    moodIds: string[];
+}
+
+export interface UpdatePreferencesDto {
+    artistIds?: string[];
+    genreIds?: string[];
+    moodIds?: string[];
+}
+
+export interface UserProfileDto {
+    id: string;
+    email: string;
+    username: string;
+    status?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface AuthResponseDto {
+    accessToken: string;
+    refreshToken: string;
+    user: UserProfileDto;
 }
 
 export type SignupResponse = ApiResponse<SignupResponseData>;

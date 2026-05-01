@@ -18,7 +18,7 @@ import { SearchTab } from "../screens/Home/SearchTab";
 import PlayerScreen from "../screens/Player/PlayerScreen";
 import MiniPlayer from "../components/Player/MiniPlayer";
 
-import { useAuth } from "../hooks/useAuth";
+import useAuth from "../hooks/useAuth"; // ⚠️ sửa import
 import type { RootStackParamList } from "./type";
 import { AUTH_UI_ONLY_MODE } from "../../utils/const";
 import { usePlayerStore } from "../store/playerStore";
@@ -27,7 +27,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 export default function AppNavigator() {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, loading } = useAuth();
     const [isSplashFinished, setSplashFinished] = React.useState(false);
     const initPlayerSync = usePlayerStore((state) => state.initPlayerSync);
 
@@ -35,7 +35,8 @@ export default function AppNavigator() {
         void initPlayerSync();
     }, [initPlayerSync]);
 
-    if (!isSplashFinished) {
+    // 🔥 gộp loading + splash
+    if (loading || !isSplashFinished) {
         return (
             <SplashScreen
                 showLoadingText={true}
@@ -49,7 +50,6 @@ export default function AppNavigator() {
     return (
         <NavigationContainer ref={navigationRef}>
             <Stack.Navigator
-                initialRouteName={AUTH_UI_ONLY_MODE ? "Welcome_1" : isAuthenticated ? "Home" : "Welcome_1"}
                 screenOptions={{
                     headerShown: false,
                     animation: "slide_from_right",
