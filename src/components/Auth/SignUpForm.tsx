@@ -13,14 +13,14 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../navigation/type";
 import AuthFooter from "./AuthFooter";
-import useAuth from "../../hooks/useAuth";
+import { useAuthContext } from "../../contexts/AuthContext";
 import { AUTH_UI_ONLY_MODE } from "../../../utils/const";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "SignUp">;
 
 export default function SignupForm() {
     const navigation = useNavigation<NavigationProp>();
-    const { register } = useAuth();
+    const { signup } = useAuthContext();
 
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
@@ -43,7 +43,7 @@ export default function SignupForm() {
             setLoading(true);
             setError("");
 
-            const result = await register(username, email, password);
+            const result = await signup(username, email, password);
 
             if (!result.success) {
                 setError(result.message || "Sign up failed");

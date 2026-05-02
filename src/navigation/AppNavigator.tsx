@@ -13,12 +13,13 @@ import WelcomeScreen_1 from "../screens/Welcome/WelcomeScreen_1";
 import WelcomeScreen_2 from "../screens/Welcome/WelcomeScreen_2";
 import WelcomeScreen_3 from "../screens/Welcome/WelcomeScreen_3";
 import WelcomeScreen_4 from "../screens/Welcome/WelcomeScreen_4";
-import { ProfileTab } from "../screens/Home/ProfileTab";
+import ProfileTab from "../screens/Home/ProfileTab";
 import { SearchTab } from "../screens/Home/SearchTab";
 import PlayerScreen from "../screens/Player/PlayerScreen";
 import MiniPlayer from "../components/Player/MiniPlayer";
+import EditProfileScreen from "../screens/Home/EditProfileScreen";
 
-import useAuth from "../hooks/useAuth"; // ⚠️ sửa import
+import { useAuthContext } from "../contexts/AuthContext"; 
 import type { RootStackParamList } from "./type";
 import { AUTH_UI_ONLY_MODE } from "../../utils/const";
 import { usePlayerStore } from "../store/playerStore";
@@ -27,7 +28,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 export default function AppNavigator() {
-    const { isAuthenticated, loading } = useAuth();
+    const { isAuthenticated, isLoading } = useAuthContext(); // 🔥 FIX
     const [isSplashFinished, setSplashFinished] = React.useState(false);
     const initPlayerSync = usePlayerStore((state) => state.initPlayerSync);
 
@@ -35,8 +36,8 @@ export default function AppNavigator() {
         void initPlayerSync();
     }, [initPlayerSync]);
 
-    // 🔥 gộp loading + splash
-    if (loading || !isSplashFinished) {
+    // loading + splash
+    if (isLoading || !isSplashFinished) {
         return (
             <SplashScreen
                 showLoadingText={true}
@@ -65,21 +66,14 @@ export default function AppNavigator() {
                         <Stack.Screen name="Login" component={LoginScreen} />
                         <Stack.Screen name="SignUp" component={SignUpScreen} />
                         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-
-                        <Stack.Screen name="Home" component={HomeScreen} />
-                        <Stack.Screen name="SongList" component={SongListScreen} />
-                        <Stack.Screen name="Profile" component={ProfileTab} />
-                        <Stack.Screen name="Search" component={SearchTab} />
-                        <Stack.Screen
-                            name="Player"
-                            component={PlayerScreen}
-                            options={{ animation: "slide_from_bottom" }}
-                        />
                     </>
                 ) : (
                     <>
                         <Stack.Screen name="Home" component={HomeScreen} />
                         <Stack.Screen name="SongList" component={SongListScreen} />
+                        <Stack.Screen name="Profile" component={ProfileTab} />
+                        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+                        <Stack.Screen name="Search" component={SearchTab} />
                         <Stack.Screen
                             name="Player"
                             component={PlayerScreen}
@@ -89,13 +83,16 @@ export default function AppNavigator() {
                 )}
             </Stack.Navigator>
 
-            <MiniPlayer
-                onOpenPlayer={() => {
-                    if (navigationRef.isReady()) {
-                        navigationRef.navigate("Player");
-                    }
-                }}
-            />
+            {/* chỉ show player khi đã login */}
+            {isAuthenticated && (
+                <MiniPlayer
+                    onOpenPlayer={() => {
+                        if (navigationRef.isReady()) {
+                            navigationRef.navigate("Player");
+                        }
+                    }}
+                />
+            )}
         </NavigationContainer>
     );
 }

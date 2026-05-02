@@ -216,7 +216,7 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
             <View style={styles.section}>
                 <SectionHeader
                     title="Quick Actions"
-                    onSeeAll={() => onSeeAll('Quick Actions', quickActions.length)}
+                    onSeeAllPress={() => onSeeAll('Quick Actions', quickActions.length)}
                 />
                 <View style={styles.grid}>
                     {quickActions.map((item) => (
@@ -234,7 +234,7 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
                 <View style={styles.section}>
                     <SectionHeader
                         title="Continue Listening"
-                        onSeeAll={() =>
+                        onSeeAllPress={() =>
                             onSeeAll('Continue Listening', continueListening.length)
                         }
                     />
@@ -250,7 +250,7 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
                 <View style={styles.section}>
                     <SectionHeader
                         title="Recommended For You"
-                        onSeeAll={() =>
+                        onSeeAllPress={() =>
                             onSeeAll('Recommended For You', recommendedSongs.length)
                         }
                     />
@@ -265,7 +265,7 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
             <View style={styles.section}>
                 <SectionHeader
                     title="New Releases"
-                    onSeeAll={() => onSeeAll('New Releases', newReleases.length)}
+                    onSeeAllPress={() => onSeeAll('New Releases', newReleases.length)}
                 />
                 <HorizontalList
                     data={previewNewReleases}
@@ -278,7 +278,7 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
                 <View style={styles.section}>
                     <SectionHeader
                         title="Trending"
-                        onSeeAll={() => onSeeAll('Trending', trendingSongs.length)}
+                        onSeeAllPress={() => onSeeAll('Trending', trendingSongs.length)}
                     />
                     <HorizontalList
                         data={previewTrendingSongs}
@@ -291,7 +291,7 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
             <View style={styles.section}>
                 <SectionHeader
                     title="Popular Artists"
-                    onSeeAll={() => onSeeAll('Popular Artists', artists.length)}
+                    onSeeAllPress={() => onSeeAll('Popular Artists', artists.length)}
                 />
                 <HorizontalList
                     data={previewPopularArtists}

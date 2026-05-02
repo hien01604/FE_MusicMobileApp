@@ -5,7 +5,7 @@ import { HeaderTab, HeaderTabs } from '../../components/common/HeaderTabs';
 import Layout from '../../components/common/Layout';
 import { HomeTab } from '../Home/HomeTab';
 import { LibraryTab } from './LibraryTab';
-import { ProfileTab } from './ProfileTab';
+import ProfileTab from './ProfileTab';
 import { SearchTab } from '../Home/SearchTab';
 
 const TAB_COMPONENTS: Record<HeaderTab, React.ComponentType> = {

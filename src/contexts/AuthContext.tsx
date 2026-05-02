@@ -1,126 +1,151 @@
-import React, { createContext, useEffect, useMemo, useState, ReactNode } from "react";
-import { User } from "../types/auth.types";
-import { tokenStorage } from "../../utils/tokenStorage";
+import React, {
+    createContext,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+    ReactNode,
+} from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as authService from "../services/auth.service";
+import { UserProfileDto } from "../types/auth.types";
+
+const ACCESS_TOKEN_KEY = "accessToken";
+const REFRESH_TOKEN_KEY = "refreshToken";
 
 interface AuthResult {
     success: boolean;
-    message: string;
+    message?: string;
 }
 
-export interface AuthContextType {
-    user: User | null;
-    token: string | null;
+interface AuthContextType {
+    user: UserProfileDto | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+
     login: (email: string, password: string) => Promise<AuthResult>;
     signup: (username: string, email: string, password: string) => Promise<AuthResult>;
     logout: () => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
+interface Props {
     children: ReactNode;
 }
 
-const MOCK_TOKEN = "fake_token_123";
+export const AuthProvider: React.FC<Props> = ({ children }) => {
+    const [user, setUser] = useState<UserProfileDto | null>(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
-const randomDelay = (): Promise<void> => {
-    const delay = 500 + Math.floor(Math.random() * 501);
-    return new Promise((resolve) => setTimeout(resolve, delay));
-};
-
-const getUsernameFromEmail = (email: string): string => {
-    const localPart = email.split("@")[0] || "music_user";
-    return localPart.replace(/[^a-zA-Z0-9_]/g, "_");
-};
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-
+    // 🔥 INIT APP (check token)
     useEffect(() => {
-        const bootstrapAuth = async (): Promise<void> => {
+        const initAuth = async () => {
             try {
-                const { token: storedToken, user: storedUser } = await tokenStorage.getAuthData();
+                const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
 
-                if (storedToken) {
-                    setToken(storedToken);
-                    setUser(
-                        storedUser || {
-                            id: "mock-user-1",
-                            username: "music_user",
-                            email: "user@example.com",
-                        }
-                    );
+                if (token) {
+                    setIsAuthenticated(true);
+
+                    // optional: fetch profile
+                    try {
+                        const profile = await authService.getProfile();
+                        setUser(profile);
+                    } catch {
+                        // token invalid → logout
+                        await handleLogout();
+                    }
                 }
             } finally {
                 setIsLoading(false);
             }
         };
 
-        bootstrapAuth();
+        initAuth();
     }, []);
 
-    const login = async (email: string, _password: string): Promise<AuthResult> => {
-        await randomDelay();
+    // 🔥 LOGIN
+    const login = async (email: string, password: string): Promise<AuthResult> => {
+        try {
+            const data = await authService.login({ email, password });
 
-        const mockUser: User = {
-            id: "mock-user-1",
-            username: getUsernameFromEmail(email),
-            email,
-        };
+            await AsyncStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+            await AsyncStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
 
-        setUser(mockUser);
-        setToken(MOCK_TOKEN);
+            setUser(data.user);
+            setIsAuthenticated(true);
 
-        // Optional persistence for app restarts. Remove if you want pure in-memory auth only.
-        await tokenStorage.saveAuthData(MOCK_TOKEN, mockUser);
-
-        // Optional AsyncStorage-only approach:
-        // await AsyncStorage.setItem("@auth_token", MOCK_TOKEN);
-
-        return { success: true, message: "Login successful" };
+            return { success: true };
+        } catch (err: any) {
+            return { success: false, message: err.message };
+        }
     };
 
-    const signup = async (username: string, email: string, _password: string): Promise<AuthResult> => {
-        await randomDelay();
+    // 🔥 SIGNUP
+    const signup = async (
+        username: string,
+        email: string,
+        password: string
+    ): Promise<AuthResult> => {
+        try {
+            const data = await authService.register({ username, email, password });
 
-        const mockUser: User = {
-            id: `mock-user-${Date.now()}`,
-            username,
-            email,
-        };
+            await AsyncStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+            await AsyncStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
 
-        setUser(mockUser);
-        setToken(MOCK_TOKEN);
+            setUser(data.user);
+            setIsAuthenticated(true);
 
-        // Optional persistence for app restarts. Remove if you want pure in-memory auth only.
-        await tokenStorage.saveAuthData(MOCK_TOKEN, mockUser);
-
-        return { success: true, message: "Signup successful" };
+            return { success: true };
+        } catch (err: any) {
+            return { success: false, message: err.message };
+        }
     };
 
-    const logout = async (): Promise<void> => {
+    // 🔥 LOGOUT (CORE FIX)
+    const handleLogout = async () => {
+        const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+
+        try {
+            if (refreshToken) {
+                await authService.logout({ refreshToken });
+            }
+        } catch {
+            // ignore BE error
+        }
+
+        await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
+        await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
+
         setUser(null);
-        setToken(null);
-
-        await tokenStorage.clearAllAuthData();
+        setIsAuthenticated(false);
     };
 
-    const value = useMemo<AuthContextType>(
+    const logout = async () => {
+        await handleLogout();
+    };
+
+    const value = useMemo(
         () => ({
             user,
-            token,
-            isAuthenticated: Boolean(user && token),
+            isAuthenticated,
             isLoading,
             login,
             signup,
             logout,
         }),
-        [user, token, isLoading]
+        [user, isAuthenticated, isLoading]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+// 
+export const useAuthContext = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error("useAuthContext must be used within AuthProvider");
+    }
+    return context;
 };

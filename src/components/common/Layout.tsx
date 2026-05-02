@@ -22,9 +22,9 @@ export default function Layout({ children }: LayoutProps) {
             {/* Overlay tối */}
             <LinearGradient
                 colors={[
-                    "rgba(5,10,30,0.85)",
-                    "rgba(5,10,30,0.6)",
-                    "rgba(5,10,30,0.85)"
+                    "rgba(5,10,30,0.9)",
+                    "rgba(5,10,30,0.8)",
+                    "rgba(5,10,30,0.9)"
                 ]}
                 style={StyleSheet.absoluteFill}
             />

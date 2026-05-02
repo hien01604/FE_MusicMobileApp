@@ -77,6 +77,7 @@ function useAuth() {
     const signup = register;
 
     const login = useCallback(
+    
         async (email: string, password: string): Promise<AuthResult> => {
             setLoading(true);
             setError(null);
@@ -96,6 +97,7 @@ function useAuth() {
             }
         },
         []
+        
     );
 
     const googleLogin = useCallback(
@@ -120,26 +122,23 @@ function useAuth() {
         []
     );
 
-    const logout = useCallback(async () => {
-        setLoading(true);
-        try {
-            const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
-            if (refreshToken) {
-                try {
-                    await authService.logout({ refreshToken });
-                } catch {
-                    // Continue logout even if API call fails
-                }
-            }
-            await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
-            await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
-        } finally {
-            setIsAuthenticated(false);
-            setUser(null);
-            setLoading(false);
-        }
-    }, []);
+    const logout = async () => {
+        const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
 
+        try {
+            if (refreshToken) {
+                await authService.logout({ refreshToken });
+            }
+        } catch (e) {
+            console.log('Logout API error:', e);
+        }
+
+        await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
+        await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
+
+        setUser(null);              
+        setIsAuthenticated(false);  
+    };
     // Alias for backward compatibility
     const signout = logout;
 

@@ -19,6 +19,7 @@ export type RootStackParamList = {
     Search: undefined;
     Player: undefined;
     SongList: { title: string; type: SongListType };
+    EditProfile: undefined;
 };
 
 /* ================= GENERIC HELPERS ================= */

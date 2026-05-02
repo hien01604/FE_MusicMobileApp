@@ -2,14 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
     FlatList,
-    ImageBackground,
     StyleSheet,
     Text,
-    TextInput,
     View,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from "@react-navigation/native";
 import { MaterialIcons } from '@expo/vector-icons';
 import BackButton from '../../components/common/BackButton';
 import Layout from '../../components/common/Layout';
@@ -18,6 +16,7 @@ import { getSongsByType } from '../../services/song.service';
 import type { Song } from '../../types';
 import type { RootStackParamList } from '../../navigation/type';
 import SearchBar from '../../components/common/SearchBar';
+import { SAIRA_STENCIL_ONE_REGULAR } from '../../../utils/const';
 
 type SongListScreenProps = NativeStackScreenProps<RootStackParamList, 'SongList'>;
 
@@ -31,6 +30,8 @@ export function SongListView({ title, type, onBack }: SongListViewProps) {
     const [searchText, setSearchText] = useState('');
     const [songs, setSongs] = useState<Song[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const navigation = useNavigation<any>();
+    
 
     useEffect(() => {
         let isMounted = true;
@@ -78,10 +79,13 @@ export function SongListView({ title, type, onBack }: SongListViewProps) {
         <Layout>
 
             <View style={styles.container}>
-                {onBack ? <BackButton onBack={onBack} /> : null}
-
+                {/* BACK + TITLE */}
+                                <View style={styles.headerRow}>
+                                <BackButton onBack={() => navigation.goBack()} />
+                                    <Text style={styles.headerTitle}>{title}</Text>
+                                    <View style={{ width: 32 }} />
+                                </View>
                 <View style={styles.headerSection}>
-                    <Text style={styles.title}>{title}</Text>
                     <SearchBar
                         value={searchText}
                         onChange={setSearchText}
@@ -134,8 +138,19 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    headerContainer: {
-        zIndex: 5,
+    headerRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 10,
+    },
+    headerTitle: {
+        fontSize: 22,
+        fontFamily: SAIRA_STENCIL_ONE_REGULAR,
+        color: '#FFFFFF',
+        marginBottom: 16,
+        letterSpacing: 0.5,
+        textAlign: "center",
     },
     contentContainer: {
         flex: 1,
@@ -145,7 +160,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 32,
-        fontWeight: '700',
+        fontFamily: SAIRA_STENCIL_ONE_REGULAR,
         color: '#FFFFFF',
         marginBottom: 16,
         letterSpacing: 0.5,

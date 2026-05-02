@@ -13,7 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../navigation/type";
 import AuthFooter from "./AuthFooter";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuthContext } from "../../contexts/AuthContext";
 import { AUTH_UI_ONLY_MODE } from "../../../utils/const";
 
 type NavigationProp = NativeStackNavigationProp<
@@ -23,7 +23,7 @@ type NavigationProp = NativeStackNavigationProp<
 
 export default function LoginForm() {
     const navigation = useNavigation<NavigationProp>();
-    const { login } = useAuth();
+    const { login } = useAuthContext();
 
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
