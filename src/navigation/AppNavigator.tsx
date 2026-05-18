@@ -7,6 +7,7 @@ import SplashScreen from "../screens/Loading/SplashScreen";
 import LoginScreen from "../screens/Auth/LoginScreen";
 import SignUpScreen from "../screens/Auth/SignUpScreen";
 import ForgotPasswordScreen from "../screens/Auth/ForgotPasswordScreen";
+import ResetPasswordScreen from "../screens/Auth/ResetPasswordScreen";
 import HomeScreen from "../screens/Home/HomeScreen";
 import SongListScreen from "../screens/Home/SongListScreen";
 import WelcomeScreen_1 from "../screens/Welcome/WelcomeScreen_1";
@@ -51,6 +52,8 @@ export default function AppNavigator() {
     return (
         <NavigationContainer ref={navigationRef}>
             <Stack.Navigator
+                key={shouldShowAuthFlow ? "auth-flow" : "app-flow"}
+                initialRouteName={shouldShowAuthFlow ? "Welcome_1" : "Home"}
                 screenOptions={{
                     headerShown: false,
                     animation: "slide_from_right",
@@ -66,6 +69,7 @@ export default function AppNavigator() {
                         <Stack.Screen name="Login" component={LoginScreen} />
                         <Stack.Screen name="SignUp" component={SignUpScreen} />
                         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
                     </>
                 ) : (
                     <>

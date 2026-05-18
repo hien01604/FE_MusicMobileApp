@@ -3,6 +3,7 @@
     "name": "music-mobile",
     "slug": "music-mobile",
     "version": "1.0.0",
+    "scheme": "musicmobile",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,6 +17,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.hien.musicmobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -27,7 +29,8 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ]
   }
 }

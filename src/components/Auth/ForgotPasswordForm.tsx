@@ -47,7 +47,7 @@ export default function ForgotPasswordForm() {
         }
 
         // Success - navigate back to login
-        navigation.goBack();
+        navigation.navigate("ResetPassword");
     };
 
     return (
@@ -100,6 +100,10 @@ export default function ForgotPasswordForm() {
             </Pressable>
 
             {error && <Text style={{ color: "#FF3C57", textAlign: "center", marginTop: 10 }}>{error}</Text>}
+
+            <Pressable onPress={() => navigation.navigate("ResetPassword")}>
+                <Text style={authStyles.forgotText}>I already have a reset token</Text>
+            </Pressable>
         </ScrollView>
     );
 }

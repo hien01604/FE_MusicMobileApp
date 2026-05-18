@@ -5,10 +5,8 @@ import { authStyles } from "../../style/authStyles";
 
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
-
-import * as authService from "../../services/auth.service";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
+import * as AuthSession from "expo-auth-session";
+import { useAuthContext } from "../../contexts/AuthContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -24,85 +22,117 @@ export default function AuthFooter({
     onFooterLinkPress,
 }: AuthFooterProps) {
 
-    const navigation = useNavigation<any>();
-
-    const [request, response, promptAsync] = Google.useAuthRequest({
-        expoClientId: "YOUR_EXPO_CLIENT_ID.apps.googleusercontent.com",
-        androidClientId: "YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com",
-        iosClientId: "YOUR_IOS_CLIENT_ID.apps.googleusercontent.com",
+    const { googleLogin } = useAuthContext();
+    const [error, setError] = React.useState("");
+    const redirectUri = AuthSession.makeRedirectUri({
+        scheme: "musicmobile",
     });
+    // 🔥 REDIRECT URI
+    const [request, response, promptAsync] =
+        
+        Google.useAuthRequest({
 
-    // 🔥 Sau khi login Google thành công
+            androidClientId:
+                process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+
+            webClientId:
+                process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+
+            redirectUri,
+        });
+
+    // 🔥 HANDLE GOOGLE RESPONSE
     useEffect(() => {
+
         if (response?.type === "success") {
-            const idToken = response.authentication?.idToken;
+
+            // ✅ LẤY ID TOKEN
+            const idToken = response.params?.id_token;
 
             if (idToken) {
                 handleLogin(idToken);
             } else {
-                console.log("❌ No idToken");
+                setError("No Google token returned");
             }
         }
+
     }, [response]);
 
+    // 🔥 OPEN GOOGLE LOGIN
     const handleGoogleLogin = async () => {
         try {
+
             await promptAsync();
+
         } catch (err) {
-            console.log("Google login error:", err);
+            setError(err instanceof Error ? err.message : "Google login failed");
         }
     };
 
+    // 🔥 LOGIN TO BACKEND
     const handleLogin = async (idToken: string) => {
-        try {
-            const res = await authService.googleLogin({ idToken });
-
-            // 🔥 LƯU TOKEN
-            await AsyncStorage.setItem("accessToken", res.accessToken);
-            await AsyncStorage.setItem("refreshToken", res.refreshToken);
-            await AsyncStorage.setItem("user", JSON.stringify(res.user));
-
-            console.log("✅ LOGIN SUCCESS:", res.user);
-
-            // NAVIGATE VÀO APP
-            navigation.reset({
-                index: 0,
-                routes: [{ name: "Home" }],
-            });
-
-        } catch (err: any) {
-            console.log("❌ LOGIN FAIL:", err.message);
+        setError("");
+        const result = await googleLogin(idToken);
+        if (!result.success) {
+            setError(result.message || "Google login failed");
         }
     };
 
     return (
         <View style={authStyles.footerContainer}>
+
             {/* DIVIDER */}
             <View style={authStyles.dividerContainer}>
                 <View style={authStyles.line} />
-                <Text style={authStyles.dividerText}>OR CONTINUE WITH</Text>
+
+                <Text style={authStyles.dividerText}>
+                    OR CONTINUE WITH
+                </Text>
+
                 <View style={authStyles.line} />
             </View>
 
             {/* GOOGLE BUTTON */}
             <View style={authStyles.socialContainer}>
+
                 <Pressable
+                    disabled={!request}
                     onPress={handleGoogleLogin}
                     style={({ pressed }) => [
                         authStyles.googleIconButton,
                         pressed && authStyles.googlePressed,
                     ]}
                 >
-                    <AntDesign name="google-plus" size={35} color="#FF3C57" />
+                    <AntDesign
+                        name="google"
+                        size={35}
+                        color="#FF3C57"
+                    />
                 </Pressable>
+
             </View>
+
+            {error ? (
+                <Text style={{ color: "#FF3C57", textAlign: "center", marginBottom: 12 }}>
+                    {error}
+                </Text>
+            ) : null}
 
             {/* FOOTER */}
             <View style={authStyles.footerLinkContainer}>
-                <Text style={authStyles.footerText}>{footerText}</Text>
-                <TouchableOpacity onPress={onFooterLinkPress}>
-                    <Text style={authStyles.footerLink}>{footerLinkText}</Text>
+
+                <Text style={authStyles.footerText}>
+                    {footerText}
+                </Text>
+
+                <TouchableOpacity
+                    onPress={onFooterLinkPress}
+                >
+                    <Text style={authStyles.footerLink}>
+                        {footerLinkText}
+                    </Text>
                 </TouchableOpacity>
+
             </View>
         </View>
     );

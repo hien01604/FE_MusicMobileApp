@@ -51,6 +51,7 @@ export default function LoginForm() {
 
         if (!result.success) {
             setError(result.message || "Login failed");
+            return;
         }
     };
     const handleForgotPassword = (): void => {

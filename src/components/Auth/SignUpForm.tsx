@@ -15,12 +15,13 @@ import type { RootStackParamList } from "../../navigation/type";
 import AuthFooter from "./AuthFooter";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { AUTH_UI_ONLY_MODE } from "../../../utils/const";
+import * as authService from "../../services/auth.service";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "SignUp">;
 
 export default function SignupForm() {
     const navigation = useNavigation<NavigationProp>();
-    const { signup } = useAuthContext();
+    const { clearAuth } = useAuthContext();
 
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
@@ -34,8 +35,8 @@ export default function SignupForm() {
             return;
         }
 
-        if (!username || !email || !password) {
-            setError("Please enter all fields");
+        if (!email.trim() || !password) {
+            setError("Please enter email and password");
             return;
         }
 
@@ -43,18 +44,16 @@ export default function SignupForm() {
             setLoading(true);
             setError("");
 
-            const result = await signup(username, email, password);
-
-            if (!result.success) {
-                setError(result.message || "Sign up failed");
-                return;
-            }
-
+            await authService.register({
+                email: email.trim(),
+                password,
+                username: username.trim() || undefined,
+            });
+            await clearAuth();
             navigation.reset({
                 index: 0,
-                routes: [{ name: "Login" }],
+                routes: [{ name: "Welcome_1" }],
             });
-
         } catch (err: any) {
             setError(err.message || "Something went wrong");
         } finally {
@@ -118,7 +117,7 @@ export default function SignupForm() {
             <Pressable
                 onPress={handleSignup}
                 style={authStyles.buttonWrapper}
-                disabled={loading || !username || !email || !password}
+                disabled={loading || !email || !password}
             >
                 {({ pressed }) =>
                     pressed && !loading ? (

@@ -6,26 +6,41 @@ import React, {
     useState,
     ReactNode,
 } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as authService from "../services/auth.service";
-import { UserProfileDto } from "../types/auth.types";
-
-const ACCESS_TOKEN_KEY = "accessToken";
-const REFRESH_TOKEN_KEY = "refreshToken";
+import { AuthResponseDto, RegisterDto, UserProfileDto } from "../types/auth.types";
+import {
+    clearAuthData,
+    getAccessToken,
+    getRefreshToken,
+    getStoredUser,
+    saveAuthData,
+} from "../services/auth.storage";
+import { setUnauthorizedHandler } from "../services/api";
 
 interface AuthResult {
     success: boolean;
+    data?: unknown;
     message?: string;
 }
 
 interface AuthContextType {
     user: UserProfileDto | null;
+    accessToken: string | null;
+    refreshToken: string | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+    loading: boolean;
+    error: string | null;
 
+    register: (data: RegisterDto) => Promise<AuthResult>;
     login: (email: string, password: string) => Promise<AuthResult>;
     signup: (username: string, email: string, password: string) => Promise<AuthResult>;
+    googleLogin: (idToken: string) => Promise<AuthResult>;
     logout: () => Promise<void>;
+    forgotPassword: (email: string) => Promise<AuthResult>;
+    resetPassword: (token: string, newPassword: string) => Promise<AuthResult>;
+    setAuth: (data: AuthResponseDto) => Promise<void>;
+    clearAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,27 +51,26 @@ interface Props {
 
 export const AuthProvider: React.FC<Props> = ({ children }) => {
     const [user, setUser] = useState<UserProfileDto | null>(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [refreshToken, setRefreshToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // 🔥 INIT APP (check token)
     useEffect(() => {
         const initAuth = async () => {
             try {
-                const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+                const [storedAccessToken, storedRefreshToken, storedUser] = await Promise.all([
+                    getAccessToken(),
+                    getRefreshToken(),
+                    getStoredUser(),
+                ]);
 
-                if (token) {
-                    setIsAuthenticated(true);
-
-                    // optional: fetch profile
-                    try {
-                        const profile = await authService.getProfile();
-                        setUser(profile);
-                    } catch {
-                        // token invalid → logout
-                        await handleLogout();
-                    }
-                }
+                setAccessToken(storedAccessToken);
+                setRefreshToken(storedRefreshToken);
+                setUser(storedUser);
+            } catch (err: any) {
+                setError(err?.message || "Failed to restore auth session");
             } finally {
                 setIsLoading(false);
             }
@@ -65,77 +79,130 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         initAuth();
     }, []);
 
-    // 🔥 LOGIN
-    const login = async (email: string, password: string): Promise<AuthResult> => {
+    const clearAuth = async () => {
+        await clearAuthData();
+        setUser(null);
+        setAccessToken(null);
+        setRefreshToken(null);
+    };
+
+    useEffect(() => {
+        setUnauthorizedHandler(() => {
+            void clearAuth();
+        });
+
+        return () => {
+            setUnauthorizedHandler(null);
+        };
+    }, []);
+
+    const setAuth = async (data: AuthResponseDto) => {
+        await saveAuthData(data);
+        setUser(data.user);
+        setAccessToken(data.accessToken);
+        setRefreshToken(data.refreshToken);
+        setError(null);
+    };
+
+    const runAuthAction = async (
+        action: () => Promise<AuthResponseDto>,
+        fallbackMessage: string
+    ): Promise<AuthResult> => {
         try {
-            const data = await authService.login({ email, password });
-
-            await AsyncStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
-            await AsyncStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
-
-            setUser(data.user);
-            setIsAuthenticated(true);
-
-            return { success: true };
+            setLoading(true);
+            setError(null);
+            const data = await action();
+            await setAuth(data);
+            return { success: true, data };
         } catch (err: any) {
-            return { success: false, message: err.message };
+            const message = err?.message || fallbackMessage;
+            setError(message);
+            return { success: false, message };
+        } finally {
+            setLoading(false);
         }
     };
 
-    // 🔥 SIGNUP
+    const register = async (data: RegisterDto): Promise<AuthResult> =>
+        runAuthAction(() => authService.register(data), "Registration failed");
+
+    const login = async (email: string, password: string): Promise<AuthResult> =>
+        runAuthAction(() => authService.login({ email, password }), "Login failed");
+
     const signup = async (
         username: string,
         email: string,
         password: string
-    ): Promise<AuthResult> => {
-        try {
-            const data = await authService.register({ username, email, password });
+    ): Promise<AuthResult> => register({ username, email, password });
 
-            await AsyncStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
-            await AsyncStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
-
-            setUser(data.user);
-            setIsAuthenticated(true);
-
-            return { success: true };
-        } catch (err: any) {
-            return { success: false, message: err.message };
-        }
-    };
-
-    // 🔥 LOGOUT (CORE FIX)
-    const handleLogout = async () => {
-        const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
-
-        try {
-            if (refreshToken) {
-                await authService.logout({ refreshToken });
-            }
-        } catch {
-            // ignore BE error
-        }
-
-        await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
-        await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
-
-        setUser(null);
-        setIsAuthenticated(false);
-    };
+    const googleLogin = async (idToken: string): Promise<AuthResult> =>
+        runAuthAction(() => authService.googleLogin(idToken), "Google login failed");
 
     const logout = async () => {
-        await handleLogout();
+        try {
+            const currentRefreshToken = await getRefreshToken();
+            if (currentRefreshToken) {
+                await authService.logout(currentRefreshToken);
+            }
+        } catch (err: any) {
+            setError(err?.message || "Logout failed");
+        } finally {
+            await clearAuth();
+        }
     };
+
+    const forgotPassword = async (email: string): Promise<AuthResult> => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await authService.forgotPassword(email);
+            return { success: true, data };
+        } catch (err: any) {
+            const message = err?.message || "Failed to send reset email";
+            setError(message);
+            return { success: false, message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resetPassword = async (token: string, newPassword: string): Promise<AuthResult> => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await authService.resetPassword(token, newPassword);
+            return { success: true, data };
+        } catch (err: any) {
+            const message = err?.message || "Password reset failed";
+            setError(message);
+            return { success: false, message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const isAuthenticated = Boolean(accessToken && refreshToken && user);
 
     const value = useMemo(
         () => ({
             user,
+            accessToken,
+            refreshToken,
             isAuthenticated,
             isLoading,
+            loading,
+            error,
+            register,
             login,
             signup,
+            googleLogin,
             logout,
+            forgotPassword,
+            resetPassword,
+            setAuth,
+            clearAuth,
         }),
-        [user, isAuthenticated, isLoading]
+        [user, accessToken, refreshToken, isAuthenticated, isLoading, loading, error]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

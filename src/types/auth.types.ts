@@ -10,7 +10,7 @@ export interface ApiResponse<T> {
 // ================= USER =================
 export interface User {
     id: string;
-    username: string;
+    username: string | null;
     email: string;
     avatar?: string;
     createdAt?: string;
@@ -52,9 +52,9 @@ export interface SignupResponseData {
 // ================= AUTH RESPONSE (from NestJS) =================
 
 export interface RegisterDto {
-    username: string;
     email: string;
     password: string;
+    username?: string;
 }
 
 export interface LoginDto {
@@ -98,7 +98,7 @@ export interface UpdatePreferencesDto {
 export interface UserProfileDto {
     id: string;
     email: string;
-    username: string;
+    username: string | null;
     status?: string;
     createdAt?: string;
     updatedAt?: string;

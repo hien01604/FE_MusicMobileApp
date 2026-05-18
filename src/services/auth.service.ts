@@ -21,7 +21,7 @@ import {
 export async function register(payload: RegisterDto): Promise<AuthResponseDto> {
     try {
         const resp = await api.post('/auth/register', payload);
-        return resp.data as AuthResponseDto;
+        return normalizeAuthResponse(resp.data);
     } catch (err) {
         throw handleAuthError(err, 'Registration failed');
     }
@@ -34,7 +34,7 @@ export async function register(payload: RegisterDto): Promise<AuthResponseDto> {
 export async function login(payload: LoginDto): Promise<AuthResponseDto> {
     try {
         const resp = await api.post('/auth/login', payload);
-        return resp.data as AuthResponseDto;
+        return normalizeAuthResponse(resp.data);
     } catch (err) {
         throw handleAuthError(err, 'Login failed');
     }
@@ -44,10 +44,10 @@ export async function login(payload: LoginDto): Promise<AuthResponseDto> {
  * POST /auth/google
  * Login with Google idToken
  */
-export async function googleLogin(payload: GoogleLoginDto): Promise<AuthResponseDto> {
+export async function googleLogin(idToken: string): Promise<AuthResponseDto> {
     try {
-        const resp = await api.post('/auth/google', payload);
-        return resp.data as AuthResponseDto;
+        const resp = await api.post('/auth/google', { idToken } satisfies GoogleLoginDto);
+        return normalizeAuthResponse(resp.data);
     } catch (err) {
         throw handleAuthError(err, 'Google login failed');
     }
@@ -57,10 +57,10 @@ export async function googleLogin(payload: GoogleLoginDto): Promise<AuthResponse
  * POST /auth/refresh
  * Refresh access token using refresh token
  */
-export async function refreshToken(payload: RefreshTokenDto): Promise<AuthResponseDto> {
+export async function refreshToken(refreshToken: string): Promise<AuthResponseDto> {
     try {
-        const resp = await api.post('/auth/refresh', payload);
-        return resp.data as AuthResponseDto;
+        const resp = await api.post('/auth/refresh', { refreshToken } satisfies RefreshTokenDto);
+        return normalizeAuthResponse(resp.data);
     } catch (err) {
         throw handleAuthError(err, 'Token refresh failed');
     }
@@ -70,9 +70,9 @@ export async function refreshToken(payload: RefreshTokenDto): Promise<AuthRespon
  * POST /auth/logout
  * Logout and revoke refresh token
  */
-export async function logout(payload: RefreshTokenDto): Promise<{ message: string }> {
+export async function logout(refreshToken: string): Promise<{ message: string }> {
     try {
-        const resp = await api.post('/auth/logout', payload);
+        const resp = await api.post('/auth/logout', { refreshToken } satisfies RefreshTokenDto);
         return resp.data as { message: string };
     } catch (err) {
         throw handleAuthError(err, 'Logout failed');
@@ -83,9 +83,9 @@ export async function logout(payload: RefreshTokenDto): Promise<{ message: strin
  * POST /auth/forgot-password
  * Request password reset email
  */
-export async function forgotPassword(payload: ForgotPasswordDto): Promise<{ message: string }> {
+export async function forgotPassword(email: string): Promise<{ message: string }> {
     try {
-        const resp = await api.post('/auth/forgot-password', payload);
+        const resp = await api.post('/auth/forgot-password', { email } satisfies ForgotPasswordDto);
         return resp.data as { message: string };
     } catch (err) {
         throw handleAuthError(err, 'Failed to send reset email');
@@ -96,9 +96,12 @@ export async function forgotPassword(payload: ForgotPasswordDto): Promise<{ mess
  * POST /auth/reset-password
  * Reset password with token
  */
-export async function resetPassword(payload: ResetPasswordDto): Promise<{ message: string }> {
+export async function resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
     try {
-        const resp = await api.post('/auth/reset-password', payload);
+        const resp = await api.post('/auth/reset-password', {
+            token,
+            newPassword,
+        } satisfies ResetPasswordDto);
         return resp.data as { message: string };
     } catch (err) {
         throw handleAuthError(err, 'Password reset failed');
@@ -106,60 +109,58 @@ export async function resetPassword(payload: ResetPasswordDto): Promise<{ messag
 }
 
 /**
- * GET /auth/me
- * Get current user profile
- * Requires JWT in Authorization header (handled by interceptor)
+ * Backend AuthController does not expose profile routes yet.
  */
 export async function getProfile(): Promise<UserProfileDto> {
-    try {
-        const resp = await api.get('/auth/me');
-        return resp.data as UserProfileDto;
-    } catch (err) {
-        throw handleAuthError(err, 'Failed to fetch profile');
-    }
+    throw new Error('Profile API is not available. Ask backend team to add GET /auth/profile.');
 }
 
 /**
- * PUT /auth/me
- * Update current user profile
- * Requires JWT in Authorization header (handled by interceptor)
+ * Backend AuthController does not expose profile routes yet.
  */
 export async function updateProfile(payload: UpdateProfileDto): Promise<UserProfileDto> {
-    try {
-        const resp = await api.put('/auth/me', payload);
-        return resp.data as UserProfileDto;
-    } catch (err) {
-        throw handleAuthError(err, 'Failed to update profile');
-    }
+    void payload;
+    throw new Error('Profile API is not available. Ask backend team to add PATCH /auth/profile.');
 }
 
 /**
- * POST /auth/preferences
- * Set user preferences (onboarding)
- * Requires JWT in Authorization header (handled by interceptor)
- * Must have ≥3 artists, ≥1 genre, ≥1 mood
+ * Backend AuthController does not expose preferences routes yet.
  */
 export async function setPreferences(payload: SetPreferencesDto): Promise<{ message: string }> {
-    try {
-        const resp = await api.post('/auth/preferences', payload);
-        return resp.data as { message: string };
-    } catch (err) {
-        throw handleAuthError(err, 'Failed to set preferences');
-    }
+    void payload;
+    throw new Error('Preferences API is not available. Ask backend team to add POST /auth/preferences.');
 }
 
 /**
- * PUT /auth/preferences
- * Update user preferences (all fields optional)
- * Requires JWT in Authorization header (handled by interceptor)
+ * Backend AuthController does not expose preferences routes yet.
  */
 export async function updatePreferences(payload: UpdatePreferencesDto): Promise<{ message: string }> {
-    try {
-        const resp = await api.put('/auth/preferences', payload);
-        return resp.data as { message: string };
-    } catch (err) {
-        throw handleAuthError(err, 'Failed to update preferences');
+    void payload;
+    throw new Error('Preferences API is not available. Ask backend team to add PATCH /auth/preferences.');
+}
+
+function unwrapData(data: unknown): unknown {
+    if (data && typeof data === 'object' && 'data' in data) {
+        return (data as { data: unknown }).data;
     }
+
+    return data;
+}
+
+function normalizeAuthResponse(data: unknown): AuthResponseDto {
+    const payload = unwrapData(data) as Record<string, any>;
+    const accessToken = payload.accessToken ?? payload.access_token ?? payload.token;
+    const refreshToken = payload.refreshToken ?? payload.refresh_token;
+
+    if (!accessToken || !refreshToken || !payload.user) {
+        throw new Error('Invalid auth response from server');
+    }
+
+    return {
+        accessToken,
+        refreshToken,
+        user: payload.user as UserProfileDto,
+    };
 }
 
 /**
