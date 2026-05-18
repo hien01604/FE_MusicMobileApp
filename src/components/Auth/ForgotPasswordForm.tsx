@@ -39,15 +39,29 @@ export default function ForgotPasswordForm() {
         }
 
         setError("");
-        const result = await forgotPassword(email.trim());
+        // Debug: log request
+        // eslint-disable-next-line no-console
+        console.log('[Auth] forgotPassword request', { email: email.trim(), ts: new Date().toISOString() });
 
-        if (!result.success) {
-            setError(result.message || "Failed to send reset email");
-            return;
+        try {
+            const result = await forgotPassword(email.trim());
+            // Debug: log response
+            // eslint-disable-next-line no-console
+            console.log('[Auth] forgotPassword result', result);
+
+            if (!result.success) {
+                setError(result.message || "Failed to send reset email");
+                return;
+            }
+
+            // Success - navigate to reset screen
+            navigation.navigate("ResetPassword");
+        } catch (err: any) {
+            // Unexpected error
+            // eslint-disable-next-line no-console
+            console.error('[Auth] forgotPassword unexpected error', err);
+            setError(err?.message || "Failed to send reset email");
         }
-
-        // Success - navigate back to login
-        navigation.navigate("ResetPassword");
     };
 
     return (
@@ -102,7 +116,6 @@ export default function ForgotPasswordForm() {
             {error && <Text style={{ color: "#FF3C57", textAlign: "center", marginTop: 10 }}>{error}</Text>}
 
             <Pressable onPress={() => navigation.navigate("ResetPassword")}>
-                <Text style={authStyles.forgotText}>I already have a reset token</Text>
             </Pressable>
         </ScrollView>
     );
