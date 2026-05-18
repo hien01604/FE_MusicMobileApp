@@ -29,7 +29,7 @@ export default function AuthFooter({
     });
     // 🔥 REDIRECT URI
     const [request, response, promptAsync] =
-        
+
         Google.useAuthRequest({
 
             androidClientId:
