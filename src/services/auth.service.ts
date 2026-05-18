@@ -170,15 +170,33 @@ function handleAuthError(err: unknown, fallbackMessage: string): Error {
     let message = fallbackMessage;
 
     if (axios.isAxiosError(err)) {
-        if (err.response?.data) {
-            const data = err.response.data as any;
-            if (typeof data.message === 'string') {
-                message = data.message;
-            } else if (Array.isArray(data.message)) {
-                message = data.message.join(' ');
-            } else if (data.error) {
-                message = String(data.error);
+        if (err.response) {
+            const { status, data } = err.response as any;
+            // Prefer explicit message fields, fall back to full payload for debugging
+            if (data) {
+                if (typeof data.message === 'string') {
+                    message = data.message;
+                } else if (Array.isArray(data.message)) {
+                    message = data.message.join(' ');
+                } else if (data.error) {
+                    message = String(data.error);
+                } else {
+                    try {
+                        message = JSON.stringify(data);
+                    } catch (_e) {
+                        message = String(data);
+                    }
+                }
+            } else if (err.message) {
+                message = err.message;
             }
+
+            if (status) {
+                message = `[${status}] ${message}`;
+            }
+            // Log full response for local debugging (remove in production)
+            // eslint-disable-next-line no-console
+            console.error('API error response:', { status: err.response.status, data: err.response.data });
         } else if (err.message) {
             message = err.message;
         }
