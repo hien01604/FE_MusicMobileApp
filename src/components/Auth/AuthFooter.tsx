@@ -46,6 +46,10 @@ export default function AuthFooter({
 
         if (response?.type === "success") {
 
+            // Debug: log full Google response
+            // eslint-disable-next-line no-console
+            console.log('[Auth] Google response', response);
+
             // ✅ LẤY ID TOKEN
             const idToken = response.params?.id_token;
 
@@ -65,6 +69,8 @@ export default function AuthFooter({
             await promptAsync();
 
         } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('[Auth] promptAsync error', err);
             setError(err instanceof Error ? err.message : "Google login failed");
         }
     };
@@ -72,9 +78,23 @@ export default function AuthFooter({
     // 🔥 LOGIN TO BACKEND
     const handleLogin = async (idToken: string) => {
         setError("");
-        const result = await googleLogin(idToken);
-        if (!result.success) {
-            setError(result.message || "Google login failed");
+        try {
+            // Debug: log idToken truncated
+            // eslint-disable-next-line no-console
+            console.log('[Auth] googleLogin idToken (truncated)', idToken?.slice?.(0, 40));
+
+            const result = await googleLogin(idToken);
+            // Debug: log backend result
+            // eslint-disable-next-line no-console
+            console.log('[Auth] googleLogin result', result);
+
+            if (!result.success) {
+                setError(result.message || "Google login failed");
+            }
+        } catch (err: any) {
+            // eslint-disable-next-line no-console
+            console.error('[Auth] googleLogin unexpected error', err);
+            setError(err?.message || "Google login failed");
         }
     };
 
