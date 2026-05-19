@@ -1,3 +1,5 @@
+export type { SongDto } from './song.types';
+
 export interface Category {
     id: string;
     title: string;
@@ -9,6 +11,9 @@ export interface Song {
     title: string;
     artist: string;
     image: string;
+    duration?: number;
+    audioUrl?: string;
+    streamUrl?: string;
 }
 
 export interface Artist {

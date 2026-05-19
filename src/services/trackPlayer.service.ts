@@ -99,7 +99,7 @@ export async function playWithTrackPlayer(song: Song) {
         title: song.title,
         artist: song.artist,
         artwork: song.image,
-        url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+        url: song.audioUrl || song.streamUrl || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
     });
     await trackPlayer.play();
 }
