@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { artists, songs } from '../../data/mockData';
@@ -7,7 +7,7 @@ import {
     listeningHistory,
     newReleases,
     quickActions,
-    trendingSongs,
+    trendingSongs as mockTrendingSongs,
 } from '../../data/homeData';
 import { Artist, Category, Song } from '../../types';
 import { CategoryCard } from '../../components/Music/CategoryCard';
@@ -17,6 +17,7 @@ import { SongCard } from '../../components/Music/SongCard';
 import ArtistCard from '../../components/Music/ArtistCard';
 import { usePlayerStore } from '../../store/playerStore';
 import type { RootStackParamList } from '../../navigation/type';
+import { getNewSongs } from '../../services/song.service';
 
 type HomeNavigation = NativeStackNavigationProp<RootStackParamList>;
 
@@ -33,6 +34,39 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
     const navigation = useNavigation<HomeNavigation>();
     const playSong = usePlayerStore((state) => state.playSong);
     const hasHistory = listeningHistory.length > 0;
+    const [latestSongs, setLatestSongs] = useState<Song[]>(newReleases);
+    const [isLoadingLatestSongs, setIsLoadingLatestSongs] = useState(false);
+    const [latestSongsError, setLatestSongsError] = useState<string | null>(null);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadLatestSongs = async () => {
+            setIsLoadingLatestSongs(true);
+            setLatestSongsError(null);
+
+            try {
+                const result = await getNewSongs();
+                if (isMounted) {
+                    setLatestSongs(result);
+                }
+            } catch {
+                if (isMounted) {
+                    setLatestSongsError('Could not load new songs.');
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoadingLatestSongs(false);
+                }
+            }
+        };
+
+        void loadLatestSongs();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const continueListening = useMemo<Song[]>(
         () =>
@@ -72,7 +106,7 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
             'new-5': 'Focus',
         };
 
-        const allCandidates = [...newReleases, ...songs].filter(
+        const allCandidates = [...latestSongs, ...songs].filter(
             (song, index, array) =>
                 array.findIndex((candidate) => candidate.id === song.id) === index
         );
@@ -99,7 +133,7 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
             })
             .sort((a, b) => b.score - a.score)
             .map((entry) => entry.song);
-    }, [hasHistory]);
+    }, [hasHistory, latestSongs]);
 
     const previewContinueListening = useMemo(
         () => continueListening.slice(0, HOME_PREVIEW_LIMIT),
@@ -112,13 +146,13 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
     );
 
     const previewNewReleases = useMemo(
-        () => newReleases.slice(0, HOME_PREVIEW_LIMIT),
-        []
+        () => latestSongs.slice(0, HOME_PREVIEW_LIMIT),
+        [latestSongs]
     );
 
     const previewTrendingSongs = useMemo(
-        () => trendingSongs.slice(0, HOME_PREVIEW_LIMIT),
-        []
+        () => (latestSongs.length > 0 ? latestSongs : mockTrendingSongs).slice(0, HOME_PREVIEW_LIMIT),
+        [latestSongs]
     );
 
     const previewPopularArtists = useMemo(
@@ -183,7 +217,8 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
 
     const onPlaySong = useCallback((song: Song) => {
         void playSong(song);
-    }, [playSong]);
+        navigation.navigate('Player');
+    }, [navigation, playSong]);
 
     const onOpenArtist = useCallback((artist: Artist) => {
         Alert.alert('Artist', 'Open ' + artist.name);
@@ -265,20 +300,28 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
             <View style={styles.section}>
                 <SectionHeader
                     title="New Releases"
-                    onSeeAllPress={() => onSeeAll('New Releases', newReleases.length)}
+                    onSeeAllPress={() => onSeeAll('New Releases', latestSongs.length)}
                 />
-                <HorizontalList
-                    data={previewNewReleases}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderSongCard}
-                />
+                {isLoadingLatestSongs ? (
+                    <ActivityIndicator size="small" color="#FF4D6D" />
+                ) : latestSongsError ? (
+                    <Text style={styles.stateText}>{latestSongsError}</Text>
+                ) : previewNewReleases.length > 0 ? (
+                    <HorizontalList
+                        data={previewNewReleases}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderSongCard}
+                    />
+                ) : (
+                    <Text style={styles.stateText}>No new songs found.</Text>
+                )}
             </View>
 
             {!hasHistory && (
                 <View style={styles.section}>
                     <SectionHeader
                         title="Trending"
-                        onSeeAllPress={() => onSeeAll('Trending', trendingSongs.length)}
+                        onSeeAllPress={() => onSeeAll('Trending', latestSongs.length)}
                     />
                     <HorizontalList
                         data={previewTrendingSongs}
@@ -318,5 +361,10 @@ const styles = StyleSheet.create({
     },
     section: {
         marginTop: 24,
+    },
+    stateText: {
+        color: '#AEB8D8',
+        fontSize: 13,
+        paddingVertical: 8,
     },
 });

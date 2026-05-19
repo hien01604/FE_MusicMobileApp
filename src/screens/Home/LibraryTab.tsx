@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 import { FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { newReleases, trendingSongs } from '../../data/homeData';
 import type { Song } from '../../types';
 import { usePlayerStore } from '../../store/playerStore';
@@ -9,6 +10,7 @@ const LIBRARY_SONGS: Song[] = [...newReleases, ...trendingSongs].filter(
 );
 
 const LibraryTabComponent = () => {
+    const navigation = useNavigation<any>();
     const playSong = usePlayerStore((state) => state.playSong);
     const currentSong = usePlayerStore((state) => state.currentSong);
     const isPlaying = usePlayerStore((state) => state.isPlaying);
@@ -24,6 +26,7 @@ const LibraryTabComponent = () => {
                     style={styles.card}
                     onPress={() => {
                         void playSong(item);
+                        navigation.navigate('Player');
                     }}
                 >
                     <Image source={{ uri: item.image }} style={styles.cover} />

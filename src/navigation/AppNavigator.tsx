@@ -31,6 +31,7 @@ export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 export default function AppNavigator() {
     const { isAuthenticated, isLoading } = useAuthContext(); // 🔥 FIX
     const [isSplashFinished, setSplashFinished] = React.useState(false);
+    const [currentRouteName, setCurrentRouteName] = React.useState<string | undefined>();
     const initPlayerSync = usePlayerStore((state) => state.initPlayerSync);
 
     React.useEffect(() => {
@@ -50,7 +51,15 @@ export default function AppNavigator() {
     const shouldShowAuthFlow = AUTH_UI_ONLY_MODE || !isAuthenticated;
 
     return (
-        <NavigationContainer ref={navigationRef}>
+        <NavigationContainer
+            ref={navigationRef}
+            onReady={() => {
+                setCurrentRouteName(navigationRef.getCurrentRoute()?.name);
+            }}
+            onStateChange={() => {
+                setCurrentRouteName(navigationRef.getCurrentRoute()?.name);
+            }}
+        >
             <Stack.Navigator
                 key={shouldShowAuthFlow ? "auth-flow" : "app-flow"}
                 initialRouteName={shouldShowAuthFlow ? "Welcome_1" : "Home"}
@@ -88,7 +97,7 @@ export default function AppNavigator() {
             </Stack.Navigator>
 
             {/* chỉ show player khi đã login */}
-            {isAuthenticated && (
+            {isAuthenticated && currentRouteName !== "Player" && (
                 <MiniPlayer
                     onOpenPlayer={() => {
                         if (navigationRef.isReady()) {

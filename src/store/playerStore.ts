@@ -23,8 +23,13 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     isPlaying: false,
 
     playSong: async (song) => {
-        await playWithTrackPlayer(song);
         set({ currentSong: song, isPlaying: true });
+
+        try {
+            await playWithTrackPlayer(song);
+        } catch {
+            set({ isPlaying: false });
+        }
     },
 
     pause: async () => {

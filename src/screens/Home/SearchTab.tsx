@@ -1,43 +1,92 @@
-import React, { memo, useMemo, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import React, { memo, useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SongListItem } from '../../components/Music/SongListItem';
 import SearchBar from '../../components/common/SearchBar';
+import { mapSongDtoToSong } from '../../services/song.service';
+import { searchSongs } from '../../services/songs.service';
+import { usePlayerStore } from '../../store/playerStore';
+import type { Song } from '../../types';
+import type { RootStackParamList } from '../../navigation/type';
 
-type SearchItem = {
-    id: string;
-    title: string;
-    kind: string;
-};
-
-const SEARCH_ITEMS: ReadonlyArray<SearchItem> = [
-    { id: 'search-1', title: 'Dream City', kind: 'Song' },
-    { id: 'search-2', title: 'Analog Heart', kind: 'Album' },
-    { id: 'search-3', title: 'Echo Saints', kind: 'Artist' },
-    { id: 'search-4', title: 'Night Drive Essentials', kind: 'Playlist' },
-    { id: 'search-5', title: 'Skyline Radio', kind: 'Podcast' },
-    { id: 'search-6', title: 'Cloudline', kind: 'Song' },
-];
+type SearchNavigation = NativeStackNavigationProp<RootStackParamList>;
 
 const SearchTabComponent = () => {
+    const navigation = useNavigation<SearchNavigation>();
     const [query, setQuery] = useState('');
+    const [songs, setSongs] = useState<Song[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const playSong = usePlayerStore((state) => state.playSong);
+    const trimmedQuery = query.trim();
 
-    const filteredItems = useMemo(() => {
-        const normalizedQuery = query.trim().toLowerCase();
-
-        if (!normalizedQuery) {
-            return SEARCH_ITEMS;
+    useEffect(() => {
+        if (!trimmedQuery) {
+            setSongs([]);
+            setIsLoading(false);
+            setError(null);
+            return;
         }
 
-        return SEARCH_ITEMS.filter((item) => {
+        let isCancelled = false;
+        setIsLoading(true);
+        setError(null);
+
+        const timeoutId = setTimeout(() => {
+            searchSongs(trimmedQuery, 20)
+                .then((result) => {
+                    if (!isCancelled) {
+                        setSongs(result.map(mapSongDtoToSong));
+                    }
+                })
+                .catch(() => {
+                    if (!isCancelled) {
+                        setSongs([]);
+                        setError('Could not load songs. Please try again.');
+                    }
+                })
+                .finally(() => {
+                    if (!isCancelled) {
+                        setIsLoading(false);
+                    }
+                });
+        }, 400);
+
+        return () => {
+            isCancelled = true;
+            clearTimeout(timeoutId);
+        };
+    }, [trimmedQuery]);
+
+    const handleSongPress = useCallback((song: Song) => {
+        void playSong(song);
+        navigation.navigate('Player');
+    }, [navigation, playSong]);
+
+    const renderEmptyState = () => {
+        if (isLoading) {
             return (
-                item.title.toLowerCase().includes(normalizedQuery) ||
-                item.kind.toLowerCase().includes(normalizedQuery)
+                <View style={styles.stateContainer}>
+                    <ActivityIndicator size="small" color="#FF4D6D" />
+                </View>
             );
-        });
-    }, [query]);
+        }
+
+        if (error) {
+            return <Text style={styles.emptyState}>{error}</Text>;
+        }
+
+        if (!trimmedQuery) {
+            return <Text style={styles.emptyState}>Search for a song to get started.</Text>;
+        }
+
+        return <Text style={styles.emptyState}>No songs found.</Text>;
+    };
 
     return (
         <FlatList
-            data={filteredItems}
+            data={songs}
             keyExtractor={(item) => item.id}
             extraData={query}
             showsVerticalScrollIndicator={false}
@@ -51,12 +100,9 @@ const SearchTabComponent = () => {
                 />
             }
             renderItem={({ item }) => (
-                <View style={styles.card}>
-                    <Text style={styles.title}>{item.title}</Text>
-                    <Text style={styles.subtitle}>{item.kind}</Text>
-                </View>
+                <SongListItem song={item} onPress={handleSongPress} />
             )}
-            ListEmptyComponent={<Text style={styles.emptyState}>No matches found.</Text>}
+            ListEmptyComponent={renderEmptyState}
         />
     );
 };
@@ -67,24 +113,9 @@ const styles = StyleSheet.create({
     contentContainer: {
         paddingBottom: 24,
     },
-    card: {
-        backgroundColor: 'rgba(14, 68, 61, 0.85)',
-        borderRadius: 14,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.08)',
-    },
-    title: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '700',
-    },
-    subtitle: {
-        marginTop: 6,
-        color: '#BDEEE1',
-        fontSize: 13,
+    stateContainer: {
+        alignItems: 'center',
+        paddingVertical: 18,
     },
     emptyState: {
         color: '#AEB8D8',

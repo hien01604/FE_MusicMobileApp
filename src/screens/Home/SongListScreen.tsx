@@ -17,6 +17,7 @@ import type { Song } from '../../types';
 import type { RootStackParamList } from '../../navigation/type';
 import SearchBar from '../../components/common/SearchBar';
 import { SAIRA_STENCIL_ONE_REGULAR } from '../../../utils/const';
+import { usePlayerStore } from '../../store/playerStore';
 
 type SongListScreenProps = NativeStackScreenProps<RootStackParamList, 'SongList'>;
 
@@ -31,6 +32,7 @@ export function SongListView({ title, type, onBack }: SongListViewProps) {
     const [songs, setSongs] = useState<Song[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const navigation = useNavigation<any>();
+    const playSong = usePlayerStore((state) => state.playSong);
     
 
     useEffect(() => {
@@ -68,7 +70,8 @@ export function SongListView({ title, type, onBack }: SongListViewProps) {
     }, [searchText, songs]);
 
     const handleSongPress = (song: Song) => {
-        console.log('Playing song:', song.title);
+        void playSong(song);
+        navigation.navigate('Player');
     };
 
     const handleMenuPress = (song: Song) => {
