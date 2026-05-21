@@ -59,19 +59,39 @@ function unwrapData(data: unknown): unknown {
 }
 
 function normalizeAuthResponse(data: unknown): AuthResponseDto {
-    const payload = unwrapData(data) as Record<string, any>;
+    const payload = unwrapData(data) as Record<string, unknown>;
     const accessToken = payload.accessToken ?? payload.access_token ?? payload.token;
     const refreshToken = payload.refreshToken ?? payload.refresh_token;
 
-    if (!accessToken || !refreshToken || !payload.user) {
+    if (
+        typeof accessToken !== "string" ||
+        typeof refreshToken !== "string" ||
+        !payload.user ||
+        typeof payload.user !== "object"
+    ) {
         throw new Error("Invalid auth response from server");
     }
 
     return {
         accessToken,
         refreshToken,
-        user: payload.user,
+        user: payload.user as AuthResponseDto["user"],
     };
+}
+
+function isAuthSessionRequest(url?: string): boolean {
+    return Boolean(
+        url &&
+        [
+            "/auth/login",
+            "/auth/register",
+            "/auth/google",
+            "/auth/refresh",
+            "/auth/logout",
+            "/auth/forgot-password",
+            "/auth/reset-password",
+        ].some((path) => url.includes(path))
+    );
 }
 
 api.interceptors.request.use(async (config) => {
@@ -87,7 +107,12 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config as RequestConfigWithRetry | undefined;
 
-        if (error.response?.status !== 401 || !originalRequest || originalRequest._retry) {
+        if (
+            error.response?.status !== 401 ||
+            !originalRequest ||
+            originalRequest._retry ||
+            isAuthSessionRequest(originalRequest.url)
+        ) {
             return Promise.reject(error);
         }
 

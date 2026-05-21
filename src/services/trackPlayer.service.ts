@@ -104,6 +104,21 @@ export async function playWithTrackPlayer(song: Song) {
     await trackPlayer.play();
 }
 
+export async function addToTrackPlayerQueue(song: Song) {
+    const trackPlayer = await ensureSetup();
+    if (!trackPlayer) {
+        return;
+    }
+
+    await trackPlayer.add({
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        artwork: song.image,
+        url: song.audioUrl || song.streamUrl || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    });
+}
+
 export async function pauseTrackPlayer() {
     const trackPlayer = getTrackPlayerModule();
     if (!trackPlayer) {
