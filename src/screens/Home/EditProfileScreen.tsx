@@ -8,25 +8,23 @@ import {
     ActivityIndicator,
     StyleSheet,
     Animated,
+    Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Layout from "../../components/common/Layout";
 import BackButton from "../../components/common/BackButton";
 
 import { useAuthContext } from "../../contexts/AuthContext";
-import * as authService from "../../services/auth.service";
-import { OPENSANS_REGULAR, SAIRA_STENCIL_ONE_REGULAR } from "../../../utils/const";
+import { updateMe } from "../../services/users.service";
+import { SAIRA_STENCIL_ONE_REGULAR } from "../../../utils/const";
 
 
 export default function EditProfileScreen() {
     const navigation = useNavigation<any>();
-    const { user } = useAuthContext();
+    const { user, setUserProfile } = useAuthContext();
 
     const [username, setUsername] = useState(user?.username || "");
     const [email] = useState(user?.email || "");
-
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -62,11 +60,13 @@ export default function EditProfileScreen() {
             setLoading(true);
             setError("");
 
-            await authService.updateProfile({ username });
+            const updatedUser = await updateMe({ username: username.trim() });
+            await setUserProfile(updatedUser);
 
+            Alert.alert("Profile updated", "Your profile has been saved.");
             navigation.goBack();
-        } catch (err: any) {
-            setError(err.message || "Update failed");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Update failed");
         } finally {
             setLoading(false);
         }
@@ -116,27 +116,6 @@ export default function EditProfileScreen() {
                             value={email}
                             editable={false}
                             style={[styles.input, { opacity: 0.6 }]}
-                        />
-
-                        {/* PASSWORD */}
-                        <Text style={styles.sectionTitle}>Change Password</Text>
-
-                        <TextInput
-                            placeholder="New Password"
-                            placeholderTextColor="#666"
-                            value={newPassword}
-                            onChangeText={setNewPassword}
-                            secureTextEntry
-                            style={styles.input}
-                        />
-
-                        <TextInput
-                            placeholder="Confirm Password"
-                            placeholderTextColor="#666"
-                            value={confirmPassword}
-                            onChangeText={setConfirmPassword}
-                            secureTextEntry
-                            style={styles.input}
                         />
 
                         {/* BUTTONS */}

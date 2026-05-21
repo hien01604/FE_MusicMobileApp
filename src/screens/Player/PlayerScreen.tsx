@@ -1,18 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+    ActivityIndicator,
+    Alert,
     Image,
     ImageBackground,
-    Modal,
     Pressable,
     StyleSheet,
     Text,
     View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Layout from '../../components/common/Layout';
+import SongOptionsModal from '../../components/Music/SongOptionsModal';
 import { usePlayerStore } from '../../store/playerStore';
+import { getSongById } from '../../services/songs.service';
+import { mapSongDtoToSong } from '../../services/song.service';
+import type { StackRoute } from '../../navigation/type';
 
 function formatDuration(duration?: number) {
     if (!duration) {
@@ -28,12 +33,54 @@ function formatDuration(duration?: number) {
 
 export default function PlayerScreen() {
     const navigation = useNavigation();
+    const route = useRoute<StackRoute<'Player'>>();
     const [isOptionsVisible, setIsOptionsVisible] = useState(false);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [detailError, setDetailError] = useState<string | null>(null);
     const currentSong = usePlayerStore((state) => state.currentSong);
     const isPlaying = usePlayerStore((state) => state.isPlaying);
+    const playSong = usePlayerStore((state) => state.playSong);
     const pause = usePlayerStore((state) => state.pause);
     const resume = usePlayerStore((state) => state.resume);
     const durationLabel = formatDuration(currentSong?.duration);
+    const songId = route.params?.songId;
+
+    useEffect(() => {
+        if (!songId) {
+            return;
+        }
+
+        let cancelled = false;
+
+        const loadSongDetail = async () => {
+            setDetailLoading(true);
+            setDetailError(null);
+
+            try {
+                const detail = mapSongDtoToSong(await getSongById(songId));
+
+                if (!cancelled) {
+                    await playSong(detail);
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setDetailError(
+                        error instanceof Error ? error.message : 'Could not load song detail.'
+                    );
+                }
+            } finally {
+                if (!cancelled) {
+                    setDetailLoading(false);
+                }
+            }
+        };
+
+        void loadSongDetail();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [playSong, songId]);
 
     const onTogglePlay = () => {
         if (isPlaying) {
@@ -46,20 +93,45 @@ export default function PlayerScreen() {
         }
     };
 
-    const optionItems = [
-        { id: 'playlist', label: 'Add to Playlist', icon: 'playlist-add' },
-        { id: 'liked', label: 'Add to Liked Songs', icon: 'favorite' },
-        { id: 'queue', label: 'Add to Queue', icon: 'queue-music' },
-        { id: 'artist', label: 'View Artist', icon: 'person' },
-        { id: 'lyrics', label: 'View Lyrics', icon: 'notes' },
-    ] as const;
-
     return (
         <Layout>
             <View style={styles.container}>
-                <Text style={styles.screenTitle}>Now Playing</Text>
-
-                <View style={styles.playerCard}>
+                <LinearGradient
+                    colors={['#08091D', '#171342', '#4E1848', '#0B102B']}
+                    locations={[0, 0.28, 0.64, 1]}
+                    style={styles.playerSurface}
+                >
+                    {currentSong && (
+                        <ImageBackground
+                            source={{ uri: currentSong.image }}
+                            style={styles.surfaceBackdrop}
+                            imageStyle={styles.surfaceBackdropImage}
+                            blurRadius={8}
+                        />
+                    )}
+                    <LinearGradient
+                        pointerEvents="none"
+                        colors={[
+                            'rgba(7, 8, 28, 0.08)',
+                            'rgba(255, 92, 95, 0.24)',
+                            'rgba(252, 128, 72, 0.18)',
+                            'rgba(11, 14, 42, 0.86)',
+                        ]}
+                        locations={[0, 0.32, 0.5, 1]}
+                        style={StyleSheet.absoluteFill}
+                    />
+                    <LinearGradient
+                        pointerEvents="none"
+                        colors={[
+                            'rgba(20, 24, 76, 0.02)',
+                            'rgba(255, 54, 137, 0.2)',
+                            'rgba(255, 184, 92, 0.12)',
+                            'rgba(11, 12, 36, 0.72)',
+                        ]}
+                        start={{ x: 0.05, y: 0.1 }}
+                        end={{ x: 0.85, y: 0.75 }}
+                        style={StyleSheet.absoluteFill}
+                    />
                     <View style={styles.topBar}>
                         <Pressable
                             hitSlop={12}
@@ -83,19 +155,30 @@ export default function PlayerScreen() {
                         </View>
                     </View>
 
+                    {detailLoading && (
+                        <ActivityIndicator
+                            style={styles.detailLoader}
+                            size="small"
+                            color="#FF7B95"
+                        />
+                    )}
+                    {detailError && (
+                        <Text style={styles.detailError}>{detailError}</Text>
+                    )}
+
                     {currentSong ? (
                         <>
                             <ImageBackground
                                 source={{ uri: currentSong.image }}
                                 style={styles.hero}
                                 imageStyle={styles.heroImage}
-                                blurRadius={1}
+                                blurRadius={10}
                             >
                                 <LinearGradient
                                     colors={[
-                                        'rgba(15, 22, 54, 0.04)',
-                                        'rgba(12, 17, 44, 0.28)',
-                                        'rgba(7, 11, 35, 0.94)',
+                                        'rgba(255, 90, 112, 0.18)',
+                                        'rgba(255, 126, 78, 0.14)',
+                                        'rgba(9, 12, 36, 0.1)',
                                     ]}
                                     style={StyleSheet.absoluteFill}
                                 />
@@ -167,60 +250,15 @@ export default function PlayerScreen() {
                             <Text style={styles.emptyText}>Select a song to start playback</Text>
                         </View>
                     )}
-                </View>
+                </LinearGradient>
 
-                <Modal
-                    transparent
+                <SongOptionsModal
                     visible={isOptionsVisible}
-                    animationType="fade"
-                    onRequestClose={() => setIsOptionsVisible(false)}
-                >
-                    <Pressable
-                        style={styles.optionsOverlay}
-                        onPress={() => setIsOptionsVisible(false)}
-                    >
-                        <Pressable style={styles.optionsSheet}>
-                            <Text style={styles.optionsTitle}>More Options</Text>
-
-                            {currentSong && (
-                                <View style={styles.optionsSongRow}>
-                                    <Image
-                                        source={{ uri: currentSong.image }}
-                                        style={styles.optionsCover}
-                                    />
-                                    <View style={styles.optionsSongInfo}>
-                                        <Text style={styles.optionsSongTitle} numberOfLines={1}>
-                                            {currentSong.title}
-                                        </Text>
-                                        <Text style={styles.optionsSongArtist} numberOfLines={1}>
-                                            {currentSong.artist}
-                                        </Text>
-                                    </View>
-                                </View>
-                            )}
-
-                            <View style={styles.optionList}>
-                                {optionItems.map((item) => (
-                                    <Pressable
-                                        key={item.id}
-                                        style={({ pressed }) => [
-                                            styles.optionItem,
-                                            pressed && styles.optionItemPressed,
-                                        ]}
-                                        onPress={() => setIsOptionsVisible(false)}
-                                    >
-                                        <MaterialIcons
-                                            name={item.icon}
-                                            size={18}
-                                            color="#FF6F91"
-                                        />
-                                        <Text style={styles.optionText}>{item.label}</Text>
-                                    </Pressable>
-                                ))}
-                            </View>
-                        </Pressable>
-                    </Pressable>
-                </Modal>
+                    song={currentSong}
+                    onClose={() => setIsOptionsVisible(false)}
+                    onSuccess={(message) => Alert.alert('Done', message)}
+                    onError={(message) => Alert.alert('Error', message)}
+                />
             </View>
         </Layout>
     );
@@ -229,21 +267,20 @@ export default function PlayerScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 8,
+        marginHorizontal: -30,
     },
-    screenTitle: {
-        color: 'rgba(255, 255, 255, 0.82)',
-        fontSize: 22,
-        fontWeight: '700',
-        marginBottom: 12,
-    },
-    playerCard: {
+    playerSurface: {
         flex: 1,
         overflow: 'hidden',
-        borderRadius: 18,
-        backgroundColor: '#071139',
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.12)',
+        backgroundColor: '#070812',
+    },
+    surfaceBackdrop: {
+        ...StyleSheet.absoluteFillObject,
+        opacity: 1,
+    },
+    surfaceBackdropImage: {
+        resizeMode: 'cover',
+        transform: [{ scale: 1.08 }],
     },
     topBar: {
         position: 'absolute',
@@ -260,6 +297,21 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 14,
     },
+    detailLoader: {
+        position: 'absolute',
+        top: 56,
+        alignSelf: 'center',
+        zIndex: 5,
+    },
+    detailError: {
+        position: 'absolute',
+        top: 54,
+        left: 24,
+        right: 24,
+        color: '#FF7B95',
+        textAlign: 'center',
+        zIndex: 5,
+    },
     iconButton: {
         width: 28,
         height: 28,
@@ -267,32 +319,34 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     hero: {
-        height: '63%',
-        justifyContent: 'flex-end',
+        height: '60%',
+        justifyContent: 'center',
         alignItems: 'center',
-        paddingBottom: 26,
-        backgroundColor: '#11182F',
+        paddingTop: 28,
+        backgroundColor: 'transparent',
     },
     heroImage: {
         resizeMode: 'cover',
+        opacity: 0,
     },
     discShadow: {
-        width: 172,
-        height: 172,
-        borderRadius: 86,
+        width: 190,
+        height: 190,
+        borderRadius: 95,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(255, 91, 126, 0.82)',
+        backgroundColor: 'rgba(255, 91, 126, 0.9)',
         shadowColor: '#000000',
         shadowOpacity: 0.38,
         shadowRadius: 18,
         shadowOffset: { width: 0, height: 10 },
         elevation: 8,
+        zIndex: 1,
     },
     disc: {
-        width: 154,
-        height: 154,
-        borderRadius: 77,
+        width: 170,
+        height: 170,
+        borderRadius: 85,
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
@@ -316,7 +370,8 @@ const styles = StyleSheet.create({
     songInfo: {
         alignItems: 'center',
         paddingHorizontal: 24,
-        marginTop: -2,
+        marginTop: 8,
+        zIndex: 1,
     },
     title: {
         color: '#FFFFFF',
@@ -325,7 +380,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     artist: {
-        color: '#9EA8CB',
+        color: '#D3B8EF',
         fontSize: 12,
         fontWeight: '700',
         marginTop: 5,
@@ -333,7 +388,8 @@ const styles = StyleSheet.create({
     },
     progressSection: {
         marginTop: 28,
-        paddingHorizontal: 22,
+        paddingHorizontal: 30,
+        zIndex: 1,
     },
     progressTrack: {
         height: 3,
@@ -344,7 +400,7 @@ const styles = StyleSheet.create({
         width: '16%',
         height: 3,
         borderRadius: 2,
-        backgroundColor: '#FF5D79',
+        backgroundColor: '#FF7C4F',
     },
     progressKnob: {
         position: 'absolute',
@@ -353,7 +409,7 @@ const styles = StyleSheet.create({
         width: 9,
         height: 9,
         borderRadius: 5,
-        backgroundColor: '#FF5D79',
+        backgroundColor: '#FF7C4F',
     },
     timeRow: {
         flexDirection: 'row',
@@ -365,11 +421,12 @@ const styles = StyleSheet.create({
         fontSize: 10,
     },
     controls: {
-        marginTop: 18,
-        paddingHorizontal: 18,
+        marginTop: 20,
+        paddingHorizontal: 28,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        zIndex: 1,
     },
     controlButton: {
         width: 36,
@@ -383,7 +440,7 @@ const styles = StyleSheet.create({
         borderRadius: 29,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#FF7891',
+        backgroundColor: '#FFB85C',
     },
     emptyState: {
         flex: 1,
@@ -397,76 +454,5 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         marginTop: 12,
         textAlign: 'center',
-    },
-    optionsOverlay: {
-        flex: 1,
-        justifyContent: 'flex-end',
-        paddingHorizontal: 30,
-        paddingBottom: 30,
-        backgroundColor: 'rgba(4, 7, 24, 0.2)',
-    },
-    optionsSheet: {
-        overflow: 'hidden',
-        borderRadius: 16,
-        backgroundColor: 'rgba(70, 20, 72, 0.96)',
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-    },
-    optionsTitle: {
-        color: '#FFFFFF',
-        fontSize: 12,
-        fontWeight: '700',
-        textAlign: 'center',
-        paddingTop: 10,
-        paddingBottom: 8,
-    },
-    optionsSongRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 14,
-        paddingBottom: 10,
-    },
-    optionsCover: {
-        width: 38,
-        height: 38,
-        borderRadius: 19,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.3)',
-    },
-    optionsSongInfo: {
-        flex: 1,
-        marginLeft: 10,
-    },
-    optionsSongTitle: {
-        color: '#FFFFFF',
-        fontSize: 13,
-        fontWeight: '800',
-    },
-    optionsSongArtist: {
-        color: '#C9A4C9',
-        fontSize: 10,
-        fontWeight: '600',
-        marginTop: 2,
-    },
-    optionList: {
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255, 255, 255, 0.08)',
-    },
-    optionItem: {
-        minHeight: 36,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255, 255, 255, 0.07)',
-    },
-    optionItemPressed: {
-        backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    },
-    optionText: {
-        color: '#FFFFFF',
-        fontSize: 12,
-        fontWeight: '700',
-        marginLeft: 12,
     },
 });

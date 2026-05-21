@@ -1,50 +1,66 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     FlatList,
     StyleSheet,
     Text,
     View,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import BackButton from '../../components/common/BackButton';
 import Layout from '../../components/common/Layout';
 import { SongListItem } from '../../components/Music/SongListItem';
-import { getSongsByType } from '../../services/song.service';
-import type { Song } from '../../types';
+import SongOptionsModal from '../../components/Music/SongOptionsModal';
+import { getSongsBySource } from '../../services/song.service';
+import type { Song, SongListSource } from '../../types';
 import type { RootStackParamList } from '../../navigation/type';
 import SearchBar from '../../components/common/SearchBar';
 import { SAIRA_STENCIL_ONE_REGULAR } from '../../../utils/const';
 import { usePlayerStore } from '../../store/playerStore';
 
 type SongListScreenProps = NativeStackScreenProps<RootStackParamList, 'SongList'>;
+type SongListNavigation = NativeStackNavigationProp<RootStackParamList>;
 
 type SongListViewProps = {
-    title: string;
-    type: 'all' | 'new' | 'trending' | 'continueListening' | 'recommended';
+    source: SongListSource;
     onBack?: () => void;
 };
 
-export function SongListView({ title, type, onBack }: SongListViewProps) {
+export function SongListView({ source, onBack }: SongListViewProps) {
     const [searchText, setSearchText] = useState('');
     const [songs, setSongs] = useState<Song[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const navigation = useNavigation<any>();
+    const [error, setError] = useState<string | null>(null);
+    const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+    const navigation = useNavigation<SongListNavigation>();
     const playSong = usePlayerStore((state) => state.playSong);
-    
 
     useEffect(() => {
         let isMounted = true;
 
         const loadSongs = async () => {
             setIsLoading(true);
-            const result = await getSongsByType(type);
+            setError(null);
 
-            if (isMounted) {
-                setSongs(result);
-                setIsLoading(false);
+            try {
+                const result = await getSongsBySource(source);
+
+                if (isMounted) {
+                    setSongs(result);
+                }
+            } catch {
+                if (isMounted) {
+                    setSongs([]);
+                    setError('Could not load songs.');
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
             }
         };
 
@@ -53,7 +69,7 @@ export function SongListView({ title, type, onBack }: SongListViewProps) {
         return () => {
             isMounted = false;
         };
-    }, [type]);
+    }, [source]);
 
     const filteredSongs = useMemo(() => {
         const normalized = searchText.trim().toLowerCase();
@@ -71,23 +87,22 @@ export function SongListView({ title, type, onBack }: SongListViewProps) {
 
     const handleSongPress = (song: Song) => {
         void playSong(song);
-        navigation.navigate('Player');
+        navigation.navigate('Player', { songId: song.id });
     };
 
     const handleMenuPress = (song: Song) => {
-        console.log('Menu pressed for:', song.title);
+        setSelectedSong(song);
     };
 
     return (
         <Layout>
-
             <View style={styles.container}>
-                {/* BACK + TITLE */}
-                                <View style={styles.headerRow}>
-                                <BackButton onBack={() => navigation.goBack()} />
-                                    <Text style={styles.headerTitle}>{title}</Text>
-                                    <View style={{ width: 32 }} />
-                                </View>
+                <View style={styles.headerRow}>
+                    <BackButton onBack={onBack ?? (() => navigation.goBack())} />
+                    <Text style={styles.headerTitle}>{source.title}</Text>
+                    <View style={styles.headerSpacer} />
+                </View>
+
                 <View style={styles.headerSection}>
                     <SearchBar
                         value={searchText}
@@ -120,20 +135,26 @@ export function SongListView({ title, type, onBack }: SongListViewProps) {
                                     size={48}
                                     color="rgba(255, 255, 255, 0.3)"
                                 />
-                                <Text style={styles.emptyText}>No songs found</Text>
+                                <Text style={styles.emptyText}>{error ?? 'No songs found'}</Text>
                             </View>
                         }
                     />
                 )}
+                <SongOptionsModal
+                    visible={Boolean(selectedSong)}
+                    song={selectedSong}
+                    onClose={() => setSelectedSong(null)}
+                    onSuccess={(message) => Alert.alert('Done', message)}
+                    onError={(message) => Alert.alert('Error', message)}
+                />
             </View>
         </Layout>
     );
 }
 
 export default function SongListScreen({ route, navigation }: SongListScreenProps) {
-    const { title, type } = route.params;
     return (
-        <SongListView title={title} type={type} onBack={() => navigation.goBack()} />
+        <SongListView source={route.params} onBack={() => navigation.goBack()} />
     );
 }
 
@@ -152,40 +173,13 @@ const styles = StyleSheet.create({
         fontFamily: SAIRA_STENCIL_ONE_REGULAR,
         color: '#FFFFFF',
         marginBottom: 16,
-        letterSpacing: 0.5,
         textAlign: "center",
     },
-    contentContainer: {
-        flex: 1,
+    headerSpacer: {
+        width: 32,
     },
     headerSection: {
         marginBottom: 24,
-    },
-    title: {
-        fontSize: 32,
-        fontFamily: SAIRA_STENCIL_ONE_REGULAR,
-        color: '#FFFFFF',
-        marginBottom: 16,
-        letterSpacing: 0.5,
-        textAlign: "center",
-    },
-    searchBarContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#F1F1F1',
-        borderRadius: 28,
-        paddingHorizontal: 14,
-        height: 48,
-        borderWidth: 1,
-        borderColor: 'rgba(0, 0, 0, 0.05)',
-    },
-    searchIcon: {
-        marginRight: 10,
-    },
-    searchInput: {
-        flex: 1,
-        fontSize: 14,
-        color: '#1F2937',
     },
     loadingContainer: {
         flex: 1,

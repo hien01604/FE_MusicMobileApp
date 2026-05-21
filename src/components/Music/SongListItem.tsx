@@ -45,7 +45,10 @@ const SongListItemComponent = ({
                     styles.menuButton,
                     pressed && styles.menuButtonPressed,
                 ]}
-                onPress={() => onMenuPress?.(song)}
+                onPress={(event) => {
+                    event.stopPropagation();
+                    onMenuPress?.(song);
+                }}
             >
                 <MaterialIcons
                     name="more-vert"

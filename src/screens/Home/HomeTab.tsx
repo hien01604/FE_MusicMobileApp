@@ -2,14 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { artists, songs } from '../../data/mockData';
-import {
-    listeningHistory,
-    newReleases,
-    quickActions,
-    trendingSongs as mockTrendingSongs,
-} from '../../data/homeData';
-import { Artist, Category, Song } from '../../types';
+import { Artist, Category, Song, SongListSource } from '../../types';
 import { CategoryCard } from '../../components/Music/CategoryCard';
 import { SectionHeader } from '../../components/Music/SectionHeader';
 import HorizontalList from '../../components/Music/HorizontalList';
@@ -17,216 +10,211 @@ import { SongCard } from '../../components/Music/SongCard';
 import ArtistCard from '../../components/Music/ArtistCard';
 import { usePlayerStore } from '../../store/playerStore';
 import type { RootStackParamList } from '../../navigation/type';
-import { getNewSongs } from '../../services/song.service';
+import {
+    getContinueListeningSongs,
+    getNewSongs,
+    getRecommendedSongs,
+    getTrendingSongs,
+} from '../../services/song.service';
+import { getPopularArtists } from '../../services/artist.service';
 
 type HomeNavigation = NativeStackNavigationProp<RootStackParamList>;
 
 type HomeTabProps = {
-    onOpenSongList?: (
-        title: string,
-        type: 'all' | 'new' | 'trending' | 'continueListening' | 'recommended'
-    ) => void;
+    onOpenSongList?: (source: SongListSource) => void;
 };
 
 const HOME_PREVIEW_LIMIT = 6;
 
+type HomeQuickAction = Category & SongListSource;
+
+type HomeSongSection = SongListSource & {
+    id: string;
+    songs: Song[];
+    isLoading?: boolean;
+    error?: string | null;
+    emptyText?: string;
+    hideWhenEmpty?: boolean;
+};
+
+const quickActions: HomeQuickAction[] = [
+    { id: 'quick-new', title: 'New Songs', icon: 'fiber-new', sourceType: 'new' },
+    { id: 'quick-trending', title: 'Trending', icon: 'whatshot', sourceType: 'trending' },
+    {
+        id: 'quick-liked',
+        title: 'Liked Songs',
+        icon: 'favorite',
+        sourceType: 'liked',
+    },
+    {
+        id: 'quick-daily-mix',
+        title: 'Daily Mix',
+        icon: 'auto-awesome',
+        sourceType: 'recommended',
+    },
+];
+
+function toSongListSource(source: SongListSource): SongListSource {
+    const { title, sourceType, sectionId, query, endpoint } = source;
+
+    return {
+        title,
+        sourceType,
+        ...(sectionId ? { sectionId } : {}),
+        ...(query ? { query } : {}),
+        ...(endpoint ? { endpoint } : {}),
+    };
+}
+
 export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
     const navigation = useNavigation<HomeNavigation>();
     const playSong = usePlayerStore((state) => state.playSong);
-    const hasHistory = listeningHistory.length > 0;
-    const [latestSongs, setLatestSongs] = useState<Song[]>(newReleases);
+    const [latestSongs, setLatestSongs] = useState<Song[]>([]);
+    const [continueListening, setContinueListening] = useState<Song[]>([]);
+    const [recommendedSongs, setRecommendedSongs] = useState<Song[]>([]);
+    const [trendingSongs, setTrendingSongs] = useState<Song[]>([]);
+    const [popularArtists, setPopularArtists] = useState<Artist[]>([]);
     const [isLoadingLatestSongs, setIsLoadingLatestSongs] = useState(false);
     const [latestSongsError, setLatestSongsError] = useState<string | null>(null);
+    const [sectionError, setSectionError] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
 
-        const loadLatestSongs = async () => {
+        const loadHomeData = async () => {
             setIsLoadingLatestSongs(true);
             setLatestSongsError(null);
+            setSectionError(null);
 
-            try {
-                const result = await getNewSongs();
-                if (isMounted) {
-                    setLatestSongs(result);
-                }
-            } catch {
-                if (isMounted) {
+            const [
+                latestResult,
+                continueResult,
+                recommendedResult,
+                trendingResult,
+                artistResult,
+            ] = await Promise.allSettled([
+                getNewSongs(),
+                getContinueListeningSongs(),
+                getRecommendedSongs(),
+                getTrendingSongs(),
+                getPopularArtists(),
+            ]);
+
+            if (isMounted) {
+                if (latestResult.status === 'fulfilled') {
+                    setLatestSongs(latestResult.value);
+                } else {
+                    setLatestSongs([]);
                     setLatestSongsError('Could not load new songs.');
                 }
-            } finally {
-                if (isMounted) {
-                    setIsLoadingLatestSongs(false);
+
+                setContinueListening(
+                    continueResult.status === 'fulfilled' ? continueResult.value : []
+                );
+                setRecommendedSongs(
+                    recommendedResult.status === 'fulfilled' ? recommendedResult.value : []
+                );
+                setTrendingSongs(
+                    trendingResult.status === 'fulfilled' ? trendingResult.value : []
+                );
+                setPopularArtists(
+                    artistResult.status === 'fulfilled' ? artistResult.value : []
+                );
+
+                if (
+                    continueResult.status === 'rejected' ||
+                    recommendedResult.status === 'rejected' ||
+                    trendingResult.status === 'rejected' ||
+                    artistResult.status === 'rejected'
+                ) {
+                    setSectionError('Some home sections could not be loaded.');
                 }
+
+                setIsLoadingLatestSongs(false);
             }
         };
 
-        void loadLatestSongs();
+        void loadHomeData();
 
         return () => {
             isMounted = false;
         };
     }, []);
 
-    const continueListening = useMemo<Song[]>(
-        () =>
-            listeningHistory.filter((item) => item.progress < 0.7)
-                .sort(
-                    (a, b) =>
-                        new Date(b.lastListenedAt).getTime() -
-                        new Date(a.lastListenedAt).getTime()
-                )
-                .map((item) => ({
-                    id: item.id,
-                    title: item.title,
-                    artist: item.artist,
-                    image: item.image,
-                })),
-        []
-    );
-
-    const recommendedSongs = useMemo<Song[]>(() => {
-        if (!hasHistory) {
-            return [];
-        }
-
-        const preferredArtists = new Set(
-            listeningHistory.map((item) => item.artist.toLowerCase())
-        );
-        const preferredGenres = new Set(
-            listeningHistory.map((item) => item.genre.toLowerCase())
-        );
-        const preferredMoods = new Set(
-            listeningHistory.map((item) => item.mood.toLowerCase())
-        );
-
-        const artistHintBySongId: Record<string, string> = {
-            'new-2': 'Electronic',
-            'new-3': 'Chill',
-            'new-5': 'Focus',
-        };
-
-        const allCandidates = [...latestSongs, ...songs].filter(
-            (song, index, array) =>
-                array.findIndex((candidate) => candidate.id === song.id) === index
-        );
-
-        return allCandidates
-            .map((song) => {
-                let score = 0;
-                const artist = song.artist.toLowerCase();
-                const behaviorHint = (artistHintBySongId[song.id] || '').toLowerCase();
-
-                if (preferredArtists.has(artist)) {
-                    score += 3;
-                }
-
-                if (preferredGenres.has(behaviorHint)) {
-                    score += 2;
-                }
-
-                if (preferredMoods.has(behaviorHint)) {
-                    score += 2;
-                }
-
-                return { song, score };
-            })
-            .sort((a, b) => b.score - a.score)
-            .map((entry) => entry.song);
-    }, [hasHistory, latestSongs]);
-
-    const previewContinueListening = useMemo(
-        () => continueListening.slice(0, HOME_PREVIEW_LIMIT),
-        [continueListening]
-    );
-
-    const previewRecommendedSongs = useMemo(
-        () => recommendedSongs.slice(0, HOME_PREVIEW_LIMIT),
-        [recommendedSongs]
-    );
-
-    const previewNewReleases = useMemo(
-        () => latestSongs.slice(0, HOME_PREVIEW_LIMIT),
-        [latestSongs]
-    );
-
-    const previewTrendingSongs = useMemo(
-        () => (latestSongs.length > 0 ? latestSongs : mockTrendingSongs).slice(0, HOME_PREVIEW_LIMIT),
-        [latestSongs]
+    const songSections = useMemo<HomeSongSection[]>(
+        () => [
+            {
+                id: 'liked',
+                title: 'Liked Songs',
+                sourceType: 'liked',
+                songs: continueListening.slice(0, HOME_PREVIEW_LIMIT),
+                hideWhenEmpty: true,
+            },
+            {
+                id: 'recommended',
+                title: 'Recommended For You',
+                sourceType: 'recommended',
+                songs: recommendedSongs.slice(0, HOME_PREVIEW_LIMIT),
+                hideWhenEmpty: true,
+            },
+            {
+                id: 'new',
+                title: 'New Songs',
+                sourceType: 'new',
+                songs: latestSongs.slice(0, HOME_PREVIEW_LIMIT),
+                isLoading: isLoadingLatestSongs,
+                error: latestSongsError,
+                emptyText: 'No new songs found.',
+            },
+            {
+                id: 'trending',
+                title: 'Trending',
+                sourceType: 'trending',
+                songs: trendingSongs.slice(0, HOME_PREVIEW_LIMIT),
+                hideWhenEmpty: true,
+            },
+        ],
+        [
+            continueListening,
+            isLoadingLatestSongs,
+            latestSongs,
+            latestSongsError,
+            recommendedSongs,
+            trendingSongs,
+        ]
     );
 
     const previewPopularArtists = useMemo(
-        () => artists.slice(0, HOME_PREVIEW_LIMIT),
-        []
+        () => popularArtists.slice(0, HOME_PREVIEW_LIMIT),
+        [popularArtists]
     );
 
     const openSongList = useCallback(
-        (
-            title: string,
-            type: 'all' | 'new' | 'trending' | 'continueListening' | 'recommended'
-        ) => {
+        (source: SongListSource) => {
+            const listSource = toSongListSource(source);
+
             if (onOpenSongList) {
-                onOpenSongList(title, type);
+                onOpenSongList(listSource);
                 return;
             }
 
-            navigation.navigate('SongList', {
-                title,
-                type,
-            });
+            navigation.navigate('SongList', listSource);
         },
         [navigation, onOpenSongList]
     );
 
-    const onSeeAll = useCallback(
-        (section: string, totalItems: number) => {
-            if (section === 'Quick Actions') {
-                openSongList(section, 'all');
-                return;
-            }
-
-            if (section === 'Continue Listening') {
-                openSongList(section, 'continueListening');
-                return;
-            }
-
-            if (section === 'Recommended For You') {
-                openSongList(section, 'recommended');
-                return;
-            }
-
-            if (section === 'New Releases') {
-                openSongList(section, 'new');
-                return;
-            }
-
-            if (section === 'Trending') {
-                openSongList(section, 'trending');
-                return;
-            }
-
-            if (section === 'Popular Artists') {
-                openSongList(section, 'all');
-                return;
-            }
-
-            Alert.alert('See all', 'Open ' + section + ' (' + totalItems + ' items)');
-        },
-        [openSongList]
-    );
-
     const onPlaySong = useCallback((song: Song) => {
         void playSong(song);
-        navigation.navigate('Player');
+        navigation.navigate('Player', { songId: song.id });
     }, [navigation, playSong]);
 
     const onOpenArtist = useCallback((artist: Artist) => {
-        Alert.alert('Artist', 'Open ' + artist.name);
-    }, []);
+        navigation.navigate('ArtistDetail', { artistId: artist.id });
+    }, [navigation]);
 
-    const onQuickActionPress = useCallback((action: Category) => {
-        Alert.alert('Quick action', 'Open ' + action.title);
-    }, []);
+    const onQuickActionPress = useCallback((action: HomeQuickAction) => {
+        openSongList(action);
+    }, [openSongList]);
 
     const renderSongCard = useCallback(
         ({ item }: { item: Song }) => (
@@ -251,7 +239,7 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
             <View style={styles.section}>
                 <SectionHeader
                     title="Quick Actions"
-                    onSeeAllPress={() => onSeeAll('Quick Actions', quickActions.length)}
+                    hideViewAll
                 />
                 <View style={styles.grid}>
                     {quickActions.map((item) => (
@@ -264,83 +252,61 @@ export const HomeTab = ({ onOpenSongList }: HomeTabProps) => {
                     ))}
                 </View>
             </View>
-
-            {previewContinueListening.length > 0 && (
-                <View style={styles.section}>
-                    <SectionHeader
-                        title="Continue Listening"
-                        onSeeAllPress={() =>
-                            onSeeAll('Continue Listening', continueListening.length)
-                        }
-                    />
-                    <HorizontalList
-                        data={previewContinueListening}
-                        keyExtractor={(item) => item.id}
-                        renderItem={renderSongCard}
-                    />
-                </View>
+            {sectionError && (
+                <Text style={styles.stateText}>{sectionError}</Text>
             )}
 
-            {hasHistory && (
-                <View style={styles.section}>
-                    <SectionHeader
-                        title="Recommended For You"
-                        onSeeAllPress={() =>
-                            onSeeAll('Recommended For You', recommendedSongs.length)
-                        }
-                    />
-                    <HorizontalList
-                        data={previewRecommendedSongs}
-                        keyExtractor={(item) => item.id}
-                        renderItem={renderSongCard}
-                    />
-                </View>
-            )}
+            {songSections.map((section) => {
+                if (
+                    section.hideWhenEmpty &&
+                    !section.isLoading &&
+                    !section.error &&
+                    section.songs.length === 0
+                ) {
+                    return null;
+                }
 
-            <View style={styles.section}>
-                <SectionHeader
-                    title="New Releases"
-                    onSeeAllPress={() => onSeeAll('New Releases', latestSongs.length)}
-                />
-                {isLoadingLatestSongs ? (
-                    <ActivityIndicator size="small" color="#FF4D6D" />
-                ) : latestSongsError ? (
-                    <Text style={styles.stateText}>{latestSongsError}</Text>
-                ) : previewNewReleases.length > 0 ? (
-                    <HorizontalList
-                        data={previewNewReleases}
-                        keyExtractor={(item) => item.id}
-                        renderItem={renderSongCard}
-                    />
-                ) : (
-                    <Text style={styles.stateText}>No new songs found.</Text>
-                )}
-            </View>
-
-            {!hasHistory && (
-                <View style={styles.section}>
-                    <SectionHeader
-                        title="Trending"
-                        onSeeAllPress={() => onSeeAll('Trending', latestSongs.length)}
-                    />
-                    <HorizontalList
-                        data={previewTrendingSongs}
-                        keyExtractor={(item) => item.id}
-                        renderItem={renderSongCard}
-                    />
-                </View>
-            )}
+                return (
+                    <View key={section.id} style={styles.section}>
+                        <SectionHeader
+                            title={section.title}
+                            onSeeAllPress={() => openSongList(section)}
+                        />
+                        {section.isLoading ? (
+                            <ActivityIndicator size="small" color="#FF4D6D" />
+                        ) : section.error ? (
+                            <Text style={styles.stateText}>{section.error}</Text>
+                        ) : section.songs.length > 0 ? (
+                            <HorizontalList
+                                data={section.songs}
+                                keyExtractor={(item) => item.id}
+                                renderItem={renderSongCard}
+                            />
+                        ) : (
+                            <Text style={styles.stateText}>
+                                {section.emptyText ?? 'No songs found.'}
+                            </Text>
+                        )}
+                    </View>
+                );
+            })}
 
             <View style={styles.section}>
                 <SectionHeader
                     title="Popular Artists"
-                    onSeeAllPress={() => onSeeAll('Popular Artists', artists.length)}
+                    onSeeAllPress={() =>
+                        Alert.alert('Artists', 'Artist list is loaded from the server.')
+                    }
                 />
-                <HorizontalList
-                    data={previewPopularArtists}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderArtistCard}
-                />
+                {previewPopularArtists.length > 0 ? (
+                    <HorizontalList
+                        data={previewPopularArtists}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderArtistCard}
+                    />
+                ) : (
+                    <Text style={styles.stateText}>No artists found.</Text>
+                )}
             </View>
         </ScrollView>
     );

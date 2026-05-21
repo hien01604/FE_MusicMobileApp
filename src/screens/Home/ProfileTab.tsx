@@ -4,43 +4,70 @@ import {
     ScrollView,
     StyleSheet,
     Alert,
+    ActivityIndicator,
+    Text,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
 import ProfileHeader from '../../components/Profile/ProfileHeader';
 import { SectionHeader } from '../../components/Music/SectionHeader';
-import PlaylistCard from '../../components/Music/PlaylistCard';
 import { SongCard } from '../../components/Music/SongCard';
 import PreferencesListItem from '../../components/Profile/PreferencesListItem';
 import LogoutButton from '../../components/common/LogoutButton';
-import ArtistCard from '../../components/Music/ArtistCard';
-import AppModal from '../../components/common/AppModal'; // ✅ THÊM IMPORT
+import AppModal from '../../components/common/AppModal';
 
 import { useAuthContext } from "../../contexts/AuthContext";
+import type { Song } from '../../types';
+import { mapSongDtoToSong } from '../../services/song.service';
+import { getLikedSongs, getMe } from '../../services/users.service';
 
 const ProfileTab: React.FC = () => {
     const navigation = useNavigation<any>();
-    const { user, logout } = useAuthContext();
+    const { user, logout, setUserProfile } = useAuthContext();
 
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [likedSongs, setLikedSongs] = useState<Song[]>([]);
+    const [profileLoading, setProfileLoading] = useState(false);
+    const [profileError, setProfileError] = useState<string | null>(null);
 
-    // MOCK DATA
-    const playlists = [
-        { id: '1', name: 'Summer Vibes', songCount: 24, thumbnail: 'https://via.placeholder.com/80' },
-        { id: '2', name: 'Workout Mix', songCount: 18, thumbnail: 'https://via.placeholder.com/80' },
-    ];
+    React.useEffect(() => {
+        let mounted = true;
 
-    const likedSongs = [
-        { id: '1', title: 'Blinding Lights', artist: 'The Weeknd', albumImage: 'https://via.placeholder.com/60' },
-        { id: '2', title: 'As It Was', artist: 'Harry Styles', albumImage: 'https://via.placeholder.com/60' },
-    ];
+        const loadProfile = async () => {
+            setProfileLoading(true);
+            setProfileError(null);
 
-    const followedArtists = [
-        { id: '1', name: 'The Weeknd', avatar: 'https://via.placeholder.com/80' },
-        { id: '2', name: 'Taylor Swift', avatar: 'https://via.placeholder.com/80' },
-    ];
+            try {
+                const [profile, liked] = await Promise.all([
+                    getMe(),
+                    getLikedSongs(6),
+                ]);
+
+                if (mounted) {
+                    await setUserProfile(profile);
+                    setLikedSongs(liked.map(mapSongDtoToSong));
+                }
+            } catch (error) {
+                if (mounted) {
+                    setProfileError(
+                        error instanceof Error ? error.message : 'Could not load profile.'
+                    );
+                }
+            } finally {
+                if (mounted) {
+                    setProfileLoading(false);
+                }
+            }
+        };
+
+        void loadProfile();
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
 
     // HANDLERS
     const handleEditProfile = () => {
@@ -51,7 +78,8 @@ const ProfileTab: React.FC = () => {
         setLoading(true);
 
         try {
-            await logout(); // 
+            await logout();
+            Alert.alert('Logged out', 'You have been signed out.');
         } catch (error) {
             Alert.alert('Error', 'Logout failed');
         } finally {
@@ -70,56 +98,35 @@ const ProfileTab: React.FC = () => {
             >
                 {/* HEADER */}
                 <ProfileHeader
-                    username={user?.username || 'User'}
-                    email={user?.email || 'user@email.com'}
+                    username={user?.username || user?.email || 'Profile'}
+                    email={user?.email || ''}
                     onEditPress={handleEditProfile}
                 />
 
-                {/* PLAYLIST */}
-                <View style={styles.section}>
-                    <SectionHeader title="My Playlists" onSeeAllPress={() => { }} />
-                    {playlists.map(p => (
-                        <PlaylistCard key={p.id} {...p} onPress={() => { }} />
-                    ))}
-                </View>
+                {profileLoading && <ActivityIndicator size="small" color="#FF4D6D" />}
+                {profileError && <Text style={styles.stateText}>{profileError}</Text>}
 
                 {/* LIKED SONGS */}
                 <View style={styles.section}>
-                    <SectionHeader title="Liked Songs" onSeeAllPress={() => { }} />
+                    <SectionHeader
+                        title="Liked Songs"
+                        onSeeAllPress={() =>
+                            navigation.navigate('SongList', {
+                                title: 'Liked Songs',
+                                sourceType: 'liked',
+                            })
+                        }
+                    />
                     {likedSongs.map(s => (
                         <SongCard
                             key={s.id}
-                            item={{
-                                id: s.id,
-                                title: s.title,
-                                artist: s.artist,
-                                image: s.albumImage,
-                            }}
-                            onPress={() => { }}
+                            item={s}
+                            onPress={() => navigation.navigate('Player', { songId: s.id })}
                         />
                     ))}
-                </View>
-
-                {/* ARTISTS */}
-                <View style={styles.section}>
-                    <SectionHeader title="Artists" onSeeAllPress={() => { }} />
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingRight: 16 }}
-                    >
-                        {followedArtists.map(a => (
-                            <ArtistCard
-                                key={a.id}
-                                item={{
-                                    id: a.id,
-                                    name: a.name,
-                                    image: a.avatar,
-                                }}
-                                onPress={() => { }}
-                            />
-                        ))}
-                    </ScrollView>
+                    {!profileLoading && likedSongs.length === 0 && (
+                        <Text style={styles.stateText}>No liked songs yet.</Text>
+                    )}
                 </View>
 
                 {/* PREFERENCES */}
@@ -188,5 +195,9 @@ const styles = StyleSheet.create({
     },
     logoutSection: {
         marginBottom: 24,
+    },
+    stateText: {
+        color: '#AEB8D8',
+        paddingVertical: 8,
     },
 });
