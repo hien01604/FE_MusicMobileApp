@@ -6,22 +6,24 @@ import {
     ScrollView,
     Pressable,
     ActivityIndicator,
+    Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { authStyles } from "../../style/authStyles";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { RootStackParamList } from "../../navigation/type";
+import type { RootStackParamList, StackRoute } from "../../navigation/type";
 import AuthFooter from "./AuthFooter";
 import { useAuthContext } from "../../contexts/AuthContext";
-import { AUTH_UI_ONLY_MODE } from "../../../utils/const";
-import * as authService from "../../services/auth.service";
+import { setPreferences } from "../../services/users.service";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "SignUp">;
 
 export default function SignupForm() {
     const navigation = useNavigation<NavigationProp>();
-    const { clearAuth } = useAuthContext();
+    const route = useRoute<StackRoute<"SignUp">>();
+    const { register } = useAuthContext();
+    const selectedArtistIds = route.params?.artistIds ?? [];
 
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
@@ -30,35 +32,51 @@ export default function SignupForm() {
     const [error, setError] = useState("");
 
     const handleSignup = async () => {
-        if (AUTH_UI_ONLY_MODE) {
-            navigation.navigate("Login");
-            return;
-        }
-
         if (!email.trim() || !password) {
             setError("Please enter email and password");
             return;
         }
 
-        try {
-            setLoading(true);
-            setError("");
-
-            await authService.register({
-                email: email.trim(),
-                password,
-                username: username.trim() || undefined,
-            });
-            await clearAuth();
-            navigation.reset({
-                index: 0,
-                routes: [{ name: "Welcome_1" }],
-            });
-        } catch (err: any) {
-            setError(err.message || "Something went wrong");
-        } finally {
-            setLoading(false);
+        if (password.length < 6) {
+            setError("Password must be at least 6 characters");
+            return;
         }
+
+        setLoading(true);
+        setError("");
+
+        const result = await register({
+            email: email.trim(),
+            password,
+            username: username.trim() || undefined,
+        });
+
+        setLoading(false);
+
+        if (!result.success) {
+            setError(result.message || "Registration failed");
+            return;
+        }
+
+        if (selectedArtistIds.length > 0) {
+            try {
+                await setPreferences({
+                    artistIds: selectedArtistIds,
+                    genreIds: [],
+                    moodIds: [],
+                });
+            } catch (preferencesError) {
+                Alert.alert(
+                    "Account created",
+                    preferencesError instanceof Error
+                        ? `You are signed in. Preferences were not saved: ${preferencesError.message}`
+                        : "You are signed in. Preferences were not saved."
+                );
+                return;
+            }
+        }
+
+        Alert.alert("Account created", "You are signed in.");
     };
 
     const handleLoginRedirect = () => {

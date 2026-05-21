@@ -20,6 +20,10 @@ export async function getStoredUser(): Promise<UserProfileDto | null> {
     return user ? (JSON.parse(user) as UserProfileDto) : null;
 }
 
+export async function saveStoredUser(user: UserProfileDto): Promise<void> {
+    await AsyncStorage.setItem(AUTH_STORAGE_KEYS.user, JSON.stringify(user));
+}
+
 export async function saveAuthData(data: AuthResponseDto): Promise<void> {
     await AsyncStorage.multiSet([
         [AUTH_STORAGE_KEYS.accessToken, data.accessToken],

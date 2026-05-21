@@ -15,8 +15,8 @@ type NavigationProp = NativeStackNavigationProp<
 export default function WelcomeScreen_4() {
     const navigation = useNavigation<NavigationProp>();
 
-    const handleContinue = () => {
-        navigation.navigate("SignUp");
+    const handleContinue = (artistIds: string[] = []) => {
+        navigation.navigate("SignUp", { artistIds });
     };
 
     return (

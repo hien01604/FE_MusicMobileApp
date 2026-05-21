@@ -99,6 +99,7 @@ export interface UserProfileDto {
     id: string;
     email: string;
     username: string | null;
+    avatarUrl?: string | null;
     status?: string;
     createdAt?: string;
     updatedAt?: string;

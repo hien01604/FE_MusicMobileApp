@@ -25,6 +25,7 @@ export default function ForgotPasswordForm() {
     const { forgotPassword, loading } = useAuth();
     const [email, setEmail] = useState<string>("");
     const [error, setError] = useState<string>("");
+    const [message, setMessage] = useState<string>("");
 
     const handleSendReset = async (): Promise<void> => {
         if (!email.trim()) {
@@ -39,28 +40,19 @@ export default function ForgotPasswordForm() {
         }
 
         setError("");
-        // Debug: log request
-        // eslint-disable-next-line no-console
-        console.log('[Auth] forgotPassword request', { email: email.trim(), ts: new Date().toISOString() });
+        setMessage("");
 
         try {
             const result = await forgotPassword(email.trim());
-            // Debug: log response
-            // eslint-disable-next-line no-console
-            console.log('[Auth] forgotPassword result', result);
 
             if (!result.success) {
                 setError(result.message || "Failed to send reset email");
                 return;
             }
 
-            // Success - navigate to reset screen
-            navigation.navigate("ResetPassword");
-        } catch (err: any) {
-            // Unexpected error
-            // eslint-disable-next-line no-console
-            console.error('[Auth] forgotPassword unexpected error', err);
-            setError(err?.message || "Failed to send reset email");
+            setMessage("Reset link sent. Check your email for the reset token.");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to send reset email");
         }
     };
 
@@ -114,8 +106,14 @@ export default function ForgotPasswordForm() {
             </Pressable>
 
             {error && <Text style={{ color: "#FF3C57", textAlign: "center", marginTop: 10 }}>{error}</Text>}
+            {message && (
+                <Text style={{ color: "#7EE787", textAlign: "center", marginTop: 10 }}>
+                    {message}
+                </Text>
+            )}
 
             <Pressable onPress={() => navigation.navigate("ResetPassword")}>
+                <Text style={authStyles.forgotText}>I have a reset token</Text>
             </Pressable>
         </ScrollView>
     );

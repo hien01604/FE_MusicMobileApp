@@ -1,13 +1,13 @@
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
-import type { SongListType } from "../data/songLibraryData";
+import type { SongListSource } from "../types";
 
 /* ================= ROOT STACK ================= */
 
 export type RootStackParamList = {
     Splash: undefined;
     Login: undefined;
-    SignUp: undefined;
+    SignUp: { artistIds?: string[] } | undefined;
     ForgotPassword: undefined;
     ResetPassword: { token?: string } | undefined;
     Welcome_1: undefined;
@@ -18,9 +18,11 @@ export type RootStackParamList = {
     Library: undefined;
     Profile: undefined;
     Search: undefined;
-    Player: undefined;
-    SongList: { title: string; type: SongListType };
+    Player: { songId?: string } | undefined;
+    SongList: SongListSource;
     EditProfile: undefined;
+    ArtistDetail: { artistId: string };
+    Preferences: undefined;
 };
 
 /* ================= GENERIC HELPERS ================= */

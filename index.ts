@@ -4,7 +4,7 @@ import App from './App';
 
 try {
 	const TrackPlayer = require('react-native-track-player');
-	TrackPlayer.registerPlaybackService(() => require('./src/service/playbackService').default);
+	TrackPlayer.registerPlaybackService(() => require('./src/services/playbackService').default);
 } catch {
 	// In environments without native track-player (e.g. Expo Go), skip registration.
 }

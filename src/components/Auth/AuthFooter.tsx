@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, Pressable } from "react-native";
+import { ActivityIndicator, Alert, View, Text, TouchableOpacity, Pressable } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { authStyles } from "../../style/authStyles";
 
@@ -24,6 +24,7 @@ export default function AuthFooter({
 
     const { googleLogin } = useAuthContext();
     const [error, setError] = React.useState("");
+    const [loading, setLoading] = React.useState(false);
     const redirectUri = AuthSession.makeRedirectUri({
         scheme: "musicmobile",
     });
@@ -45,12 +46,6 @@ export default function AuthFooter({
     useEffect(() => {
 
         if (response?.type === "success") {
-
-            // Debug: log full Google response
-            // eslint-disable-next-line no-console
-            console.log('[Auth] Google response', response);
-
-            // ✅ LẤY ID TOKEN
             const idToken = response.params?.id_token;
 
             if (idToken) {
@@ -65,36 +60,33 @@ export default function AuthFooter({
     // 🔥 OPEN GOOGLE LOGIN
     const handleGoogleLogin = async () => {
         try {
-
+            setError("");
+            setLoading(true);
             await promptAsync();
-
         } catch (err) {
-            // eslint-disable-next-line no-console
-            console.error('[Auth] promptAsync error', err);
             setError(err instanceof Error ? err.message : "Google login failed");
+        } finally {
+            setLoading(false);
         }
     };
 
     // 🔥 LOGIN TO BACKEND
     const handleLogin = async (idToken: string) => {
         setError("");
+        setLoading(true);
         try {
-            // Debug: log idToken truncated
-            // eslint-disable-next-line no-console
-            console.log('[Auth] googleLogin idToken (truncated)', idToken?.slice?.(0, 40));
-
             const result = await googleLogin(idToken);
-            // Debug: log backend result
-            // eslint-disable-next-line no-console
-            console.log('[Auth] googleLogin result', result);
 
             if (!result.success) {
                 setError(result.message || "Google login failed");
+                return;
             }
-        } catch (err: any) {
-            // eslint-disable-next-line no-console
-            console.error('[Auth] googleLogin unexpected error', err);
-            setError(err?.message || "Google login failed");
+
+            Alert.alert("Signed in", "Google login successful.");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Google login failed");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -116,18 +108,22 @@ export default function AuthFooter({
             <View style={authStyles.socialContainer}>
 
                 <Pressable
-                    disabled={!request}
+                    disabled={!request || loading}
                     onPress={handleGoogleLogin}
                     style={({ pressed }) => [
                         authStyles.googleIconButton,
                         pressed && authStyles.googlePressed,
                     ]}
                 >
-                    <AntDesign
-                        name="google"
-                        size={35}
-                        color="#FF3C57"
-                    />
+                    {loading ? (
+                        <ActivityIndicator size="small" color="#FF3C57" />
+                    ) : (
+                        <AntDesign
+                            name="google"
+                            size={35}
+                            color="#FF3C57"
+                        />
+                    )}
                 </Pressable>
 
             </View>

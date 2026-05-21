@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
     ActivityIndicator,
+    Alert,
     Pressable,
     ScrollView,
     Text,
@@ -49,6 +50,21 @@ export default function ResetPasswordForm() {
         }
 
         setMessage("Password reset successful. Please login again.");
+        Alert.alert(
+            "Password reset",
+            "Password reset successful. Please login again.",
+            [
+                {
+                    text: "Login",
+                    onPress: () => {
+                        navigation.reset({
+                            index: 0,
+                            routes: [{ name: "Login" }],
+                        });
+                    },
+                },
+            ]
+        );
     };
 
     return (

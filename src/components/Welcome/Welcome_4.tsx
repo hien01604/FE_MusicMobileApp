@@ -1,32 +1,61 @@
 import React, { useEffect, useState } from "react"
-import { View, Text, Animated, } from "react-native"
+import { ActivityIndicator, View, Text, Animated, } from "react-native"
 import { useNavigation } from "@react-navigation/native";
 
 import ArtistGrid from "../Artist/ArtistGrid"
 import SearchBar from "../common/SearchBar"
 
 import { Artist } from "../../types/artist.types"
-import { getArtists } from "../../services/artist.service"
+import { getArtists } from "../../services/artists.service"
 import { welcomeStyles_1 } from "../../style/welcomeStyles_1"
 import BackButton from "../common/BackButton"
 import WelcomeBottom from "./WelcomeBottom"
 import useFadeSlideAnimation from "../../animations/useFadeSlideAnimation";
 
-export default function Welcome_4({ onContinue }: any) {
+type Props = {
+    onContinue: (artistIds?: string[]) => void;
+};
+
+export default function Welcome_4({ onContinue }: Props) {
     const navigation = useNavigation();
 
     const [artists, setArtists] = useState<Artist[]>([])
     const [search, setSearch] = useState("")
     const [selected, setSelected] = useState<string[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState("")
 
     const handleContinue = () => {
         if (selected.length === 0) return;
-        onContinue();
+        onContinue(selected);
     };
     const disabled = selected.length === 0;
 
     useEffect(() => {
-        getArtists().then(setArtists)
+        let mounted = true;
+
+        setLoading(true);
+        getArtists()
+            .then((result) => {
+                if (mounted) {
+                    setArtists(result);
+                    setError("");
+                }
+            })
+            .catch(() => {
+                if (mounted) {
+                    setError("Could not load artists.");
+                }
+            })
+            .finally(() => {
+                if (mounted) {
+                    setLoading(false);
+                }
+            });
+
+        return () => {
+            mounted = false;
+        };
     }, [])
 
     const toggleArtist = (artist: Artist) => {
@@ -65,18 +94,24 @@ export default function Welcome_4({ onContinue }: any) {
                     placeholder="Search for songs, artists, playlists..."
                 />
 
-                <ArtistGrid
-                    artists={filteredArtists}
-                    selected={selected}
-                    toggleArtist={toggleArtist}
-                />
+                {loading ? (
+                    <ActivityIndicator size="small" color="#FF5F7E" />
+                ) : error ? (
+                    <Text style={{ color: "#FF5F7E", textAlign: "center" }}>{error}</Text>
+                ) : (
+                    <ArtistGrid
+                        artists={filteredArtists}
+                        selected={selected}
+                        toggleArtist={toggleArtist}
+                    />
+                )}
 
                 {/* BOTTOM */}
                 <WelcomeBottom
                     text="Continue"
                     disabled={disabled}
                     onPress={handleContinue}
-                    onSkip={onContinue}
+                    onSkip={() => onContinue([])}
                     step={3}
                     total={4}
                 />

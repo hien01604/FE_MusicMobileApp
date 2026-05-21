@@ -19,10 +19,11 @@ import { SearchTab } from "../screens/Home/SearchTab";
 import PlayerScreen from "../screens/Player/PlayerScreen";
 import MiniPlayer from "../components/Player/MiniPlayer";
 import EditProfileScreen from "../screens/Home/EditProfileScreen";
+import PreferencesScreen from "../screens/Home/PreferencesScreen";
+import ArtistDetailScreen from "../screens/Artist/ArtistDetailScreen";
 
 import { useAuthContext } from "../contexts/AuthContext"; 
 import type { RootStackParamList } from "./type";
-import { AUTH_UI_ONLY_MODE } from "../../utils/const";
 import { usePlayerStore } from "../store/playerStore";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -48,7 +49,7 @@ export default function AppNavigator() {
         );
     }
 
-    const shouldShowAuthFlow = AUTH_UI_ONLY_MODE || !isAuthenticated;
+    const shouldShowAuthFlow = !isAuthenticated;
 
     return (
         <NavigationContainer
@@ -62,7 +63,7 @@ export default function AppNavigator() {
         >
             <Stack.Navigator
                 key={shouldShowAuthFlow ? "auth-flow" : "app-flow"}
-                initialRouteName={shouldShowAuthFlow ? "Welcome_1" : "Home"}
+                initialRouteName={shouldShowAuthFlow ? "Login" : "Home"}
                 screenOptions={{
                     headerShown: false,
                     animation: "slide_from_right",
@@ -86,6 +87,8 @@ export default function AppNavigator() {
                         <Stack.Screen name="SongList" component={SongListScreen} />
                         <Stack.Screen name="Profile" component={ProfileTab} />
                         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+                        <Stack.Screen name="Preferences" component={PreferencesScreen} />
+                        <Stack.Screen name="ArtistDetail" component={ArtistDetailScreen} />
                         <Stack.Screen name="Search" component={SearchTab} />
                         <Stack.Screen
                             name="Player"

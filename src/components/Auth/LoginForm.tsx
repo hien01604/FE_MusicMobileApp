@@ -6,6 +6,7 @@ import {
     ScrollView,
     Pressable,
     ActivityIndicator,
+    Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { authStyles } from "../../style/authStyles";
@@ -14,7 +15,6 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../navigation/type";
 import AuthFooter from "./AuthFooter";
 import { useAuthContext } from "../../contexts/AuthContext";
-import { AUTH_UI_ONLY_MODE } from "../../../utils/const";
 
 type NavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -33,11 +33,6 @@ export default function LoginForm() {
     const [passwordFocused, setPasswordFocused] = useState(false);
 
     const handleLogin = async (): Promise<void> => {
-        if (AUTH_UI_ONLY_MODE) {
-            navigation.navigate("Home");
-            return;
-        }
-
         if (!email.trim() || !password) {
             setError("Please enter email and password");
             return;
@@ -53,6 +48,8 @@ export default function LoginForm() {
             setError(result.message || "Login failed");
             return;
         }
+
+        Alert.alert("Signed in", "Login successful.");
     };
     const handleForgotPassword = (): void => {
         navigation.navigate("ForgotPassword");
@@ -115,7 +112,7 @@ export default function LoginForm() {
 
             <Pressable onPress={handleLogin}
                 style={authStyles.buttonWrapper}
-                disabled={AUTH_UI_ONLY_MODE ? loading : loading || !email || !password}>
+                disabled={loading || !email || !password}>
                 {({ pressed }) =>
                     pressed && !loading ? (
                         <View style={authStyles.outlineButton}>

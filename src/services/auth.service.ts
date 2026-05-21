@@ -1,16 +1,16 @@
 import api from './api';
 import axios from 'axios';
-import {
-    RegisterDto,
-    LoginDto,
-    GoogleLoginDto,
-    RefreshTokenDto,
+import type {
+    AuthResponseDto,
     ForgotPasswordDto,
+    GoogleLoginDto,
+    LoginDto,
+    RefreshTokenDto,
+    RegisterDto,
     ResetPasswordDto,
-    UpdateProfileDto,
     SetPreferencesDto,
     UpdatePreferencesDto,
-    AuthResponseDto,
+    UpdateProfileDto,
     UserProfileDto,
 } from '../types/auth.types';
 
@@ -44,7 +44,7 @@ export async function login(payload: LoginDto): Promise<AuthResponseDto> {
  * POST /auth/google
  * Login with Google idToken
  */
-export async function googleLogin(idToken: string): Promise<AuthResponseDto> {
+export async function loginWithGoogle(idToken: string): Promise<AuthResponseDto> {
     try {
         const resp = await api.post('/auth/google', { idToken } satisfies GoogleLoginDto);
         return normalizeAuthResponse(resp.data);
@@ -52,6 +52,8 @@ export async function googleLogin(idToken: string): Promise<AuthResponseDto> {
         throw handleAuthError(err, 'Google login failed');
     }
 }
+
+export const googleLogin = loginWithGoogle;
 
 /**
  * POST /auth/refresh
@@ -96,47 +98,33 @@ export async function forgotPassword(email: string): Promise<{ message: string }
  * POST /auth/reset-password
  * Reset password with token
  */
-export async function resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+export async function resetPassword(payload: ResetPasswordDto): Promise<{ message: string }> {
     try {
-        const resp = await api.post('/auth/reset-password', {
-            token,
-            newPassword,
-        } satisfies ResetPasswordDto);
+        const resp = await api.post('/auth/reset-password', payload);
         return resp.data as { message: string };
     } catch (err) {
         throw handleAuthError(err, 'Password reset failed');
     }
 }
 
-/**
- * Backend AuthController does not expose profile routes yet.
- */
 export async function getProfile(): Promise<UserProfileDto> {
-    throw new Error('Profile API is not available. Ask backend team to add GET /auth/profile.');
+    const resp = await api.get('/users/me');
+    return unwrapData(resp.data) as UserProfileDto;
 }
 
-/**
- * Backend AuthController does not expose profile routes yet.
- */
 export async function updateProfile(payload: UpdateProfileDto): Promise<UserProfileDto> {
-    void payload;
-    throw new Error('Profile API is not available. Ask backend team to add PATCH /auth/profile.');
+    const resp = await api.put('/users/me', payload);
+    return unwrapData(resp.data) as UserProfileDto;
 }
 
-/**
- * Backend AuthController does not expose preferences routes yet.
- */
 export async function setPreferences(payload: SetPreferencesDto): Promise<{ message: string }> {
-    void payload;
-    throw new Error('Preferences API is not available. Ask backend team to add POST /auth/preferences.');
+    const resp = await api.post('/users/preferences', payload);
+    return resp.data as { message: string };
 }
 
-/**
- * Backend AuthController does not expose preferences routes yet.
- */
 export async function updatePreferences(payload: UpdatePreferencesDto): Promise<{ message: string }> {
-    void payload;
-    throw new Error('Preferences API is not available. Ask backend team to add PATCH /auth/preferences.');
+    const resp = await api.put('/users/preferences', payload);
+    return resp.data as { message: string };
 }
 
 function unwrapData(data: unknown): unknown {
@@ -147,12 +135,17 @@ function unwrapData(data: unknown): unknown {
     return data;
 }
 
-function normalizeAuthResponse(data: unknown): AuthResponseDto {
-    const payload = unwrapData(data) as Record<string, any>;
+export function normalizeAuthResponse(data: unknown): AuthResponseDto {
+    const payload = unwrapData(data) as Record<string, unknown>;
     const accessToken = payload.accessToken ?? payload.access_token ?? payload.token;
     const refreshToken = payload.refreshToken ?? payload.refresh_token;
 
-    if (!accessToken || !refreshToken || !payload.user) {
+    if (
+        typeof accessToken !== 'string' ||
+        typeof refreshToken !== 'string' ||
+        !payload.user ||
+        typeof payload.user !== 'object'
+    ) {
         throw new Error('Invalid auth response from server');
     }
 
@@ -171,20 +164,20 @@ function handleAuthError(err: unknown, fallbackMessage: string): Error {
 
     if (axios.isAxiosError(err)) {
         if (err.response) {
-            const { status, data } = err.response as any;
-            // Prefer explicit message fields, fall back to full payload for debugging
-            if (data) {
-                if (typeof data.message === 'string') {
-                    message = data.message;
-                } else if (Array.isArray(data.message)) {
-                    message = data.message.join(' ');
-                } else if (data.error) {
-                    message = String(data.error);
+            const { status, data } = err.response;
+            const payload = data as Record<string, unknown> | undefined;
+            if (payload) {
+                if (typeof payload.message === 'string') {
+                    message = payload.message;
+                } else if (Array.isArray(payload.message)) {
+                    message = payload.message.map(String).join(' ');
+                } else if (payload.error) {
+                    message = String(payload.error);
                 } else {
                     try {
-                        message = JSON.stringify(data);
+                        message = JSON.stringify(payload);
                     } catch (_e) {
-                        message = String(data);
+                        message = String(payload);
                     }
                 }
             } else if (err.message) {
@@ -194,9 +187,6 @@ function handleAuthError(err: unknown, fallbackMessage: string): Error {
             if (status) {
                 message = `[${status}] ${message}`;
             }
-            // Log full response for local debugging (remove in production)
-            // eslint-disable-next-line no-console
-            console.error('API error response:', { status: err.response.status, data: err.response.data });
         } else if (err.message) {
             message = err.message;
         }

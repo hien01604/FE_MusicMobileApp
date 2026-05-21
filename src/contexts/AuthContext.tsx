@@ -14,8 +14,10 @@ import {
     getRefreshToken,
     getStoredUser,
     saveAuthData,
+    saveStoredUser,
 } from "../services/auth.storage";
 import { setUnauthorizedHandler } from "../services/api";
+import { getMe } from "../services/users.service";
 
 interface AuthResult {
     success: boolean;
@@ -40,6 +42,7 @@ interface AuthContextType {
     forgotPassword: (email: string) => Promise<AuthResult>;
     resetPassword: (token: string, newPassword: string) => Promise<AuthResult>;
     setAuth: (data: AuthResponseDto) => Promise<void>;
+    setUserProfile: (user: UserProfileDto) => Promise<void>;
     clearAuth: () => Promise<void>;
 }
 
@@ -69,8 +72,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 setAccessToken(storedAccessToken);
                 setRefreshToken(storedRefreshToken);
                 setUser(storedUser);
-            } catch (err: any) {
-                setError(err?.message || "Failed to restore auth session");
+
+                if (storedAccessToken && storedRefreshToken) {
+                    const profile = await getMe();
+                    await saveStoredUser(profile);
+                    setUser(profile);
+                }
+            } catch (err) {
+                setError(err instanceof Error ? err.message : "Failed to restore auth session");
             } finally {
                 setIsLoading(false);
             }
@@ -101,6 +110,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         setUser(data.user);
         setAccessToken(data.accessToken);
         setRefreshToken(data.refreshToken);
+        setError(null);
+    };
+
+    const setUserProfile = async (profile: UserProfileDto) => {
+        await saveStoredUser(profile);
+        setUser(profile);
         setError(null);
     };
 
@@ -136,7 +151,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     ): Promise<AuthResult> => register({ username, email, password });
 
     const googleLogin = async (idToken: string): Promise<AuthResult> =>
-        runAuthAction(() => authService.googleLogin(idToken), "Google login failed");
+        runAuthAction(() => authService.loginWithGoogle(idToken), "Google login failed");
 
     const logout = async () => {
         try {
@@ -170,7 +185,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         try {
             setLoading(true);
             setError(null);
-            const data = await authService.resetPassword(token, newPassword);
+            const data = await authService.resetPassword({ token, newPassword });
             return { success: true, data };
         } catch (err: any) {
             const message = err?.message || "Password reset failed";
@@ -200,6 +215,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             forgotPassword,
             resetPassword,
             setAuth,
+            setUserProfile,
             clearAuth,
         }),
         [user, accessToken, refreshToken, isAuthenticated, isLoading, loading, error]
