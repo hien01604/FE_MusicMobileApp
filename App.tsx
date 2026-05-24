@@ -1,20 +1,24 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import AppNavigator from "./src/navigation/AppNavigator";
+import { useFonts } from "expo-font";
+import { OPENSANS_REGULAR, SAIRA_STENCIL_ONE_REGULAR } from "./utils/const";
+import { AuthProvider } from "./src/contexts/AuthContext";
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    [OPENSANS_REGULAR]: require("./assets/font/OpenSan/static/OpenSans-Regular.ttf"),
+    [SAIRA_STENCIL_ONE_REGULAR]: require("./assets/font/Saira_Stencil_One/SairaStencilOne-Regular.ttf"),
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

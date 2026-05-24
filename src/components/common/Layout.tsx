@@ -1,0 +1,72 @@
+import { LinearGradient } from "expo-linear-gradient";
+import React, { ReactNode } from "react";
+import {
+    View,
+    StyleSheet,
+    ImageBackground,
+    Dimensions
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+type LayoutProps = {
+    children: ReactNode;
+};
+
+export default function Layout({ children }: LayoutProps) {
+    return (
+        <ImageBackground
+            source={require("../../../assets/bg/bg.png")}
+            style={styles.background}
+            resizeMode="cover"
+        >
+            {/* Overlay tối */}
+            <LinearGradient
+                colors={[
+                    "rgba(5,10,30,0.9)",
+                    "rgba(5,10,30,0.8)",
+                    "rgba(5,10,30,0.9)"
+                ]}
+                style={StyleSheet.absoluteFill}
+            />
+
+            {/* Glow hồng phía dưới
+            <LinearGradient
+                pointerEvents="none"
+                colors={["transparent", "rgba(253, 100, 120, 0.5)"]}
+                style={styles.bottomGlow}
+            /> */}
+
+            <SafeAreaView style={styles.safe}>
+                <View style={styles.container}>
+                    {children}
+                </View>
+            </SafeAreaView>
+
+        </ImageBackground>
+    );
+}
+
+const styles = StyleSheet.create({
+    background: {
+        flex: 1,
+        width: "100%",
+        height: "100%",
+    },
+
+    safe: {
+        flex: 1,
+    },
+
+    container: {
+        flex: 1,
+        paddingHorizontal: 30,
+    },
+
+    // bottomGlow: {
+    //     position: "absolute",
+    //     bottom: 0,
+    //     left: 0,
+    //     right: 0,
+    //     height: 200,
+    // },
+});
