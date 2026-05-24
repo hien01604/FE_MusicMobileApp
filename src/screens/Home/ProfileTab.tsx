@@ -1,73 +1,80 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     View,
     ScrollView,
     StyleSheet,
-    Alert,
     ActivityIndicator,
     Text,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import ProfileHeader from '../../components/Profile/ProfileHeader';
 import { SectionHeader } from '../../components/Music/SectionHeader';
-import { SongCard } from '../../components/Music/SongCard';
 import PreferencesListItem from '../../components/Profile/PreferencesListItem';
 import LogoutButton from '../../components/common/LogoutButton';
 import AppModal from '../../components/common/AppModal';
 
 import { useAuthContext } from "../../contexts/AuthContext";
-import type { Song } from '../../types';
-import { mapSongDtoToSong } from '../../services/song.service';
-import { getLikedSongs, getMe } from '../../services/users.service';
+import { getMe } from '../../services/users.service';
+import { getStoredPreferences, StoredPreferences } from '../../services/preferences.storage';
+import { usePlayerStore } from '../../store/playerStore';
 
 const ProfileTab: React.FC = () => {
     const navigation = useNavigation<any>();
     const { user, logout, setUserProfile } = useAuthContext();
+    const dismissPlayer = usePlayerStore((state) => state.dismissPlayer);
 
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
-    const [likedSongs, setLikedSongs] = useState<Song[]>([]);
     const [profileLoading, setProfileLoading] = useState(false);
     const [profileError, setProfileError] = useState<string | null>(null);
+    const [preferences, setPreferences] = useState<StoredPreferences>({
+        artists: [],
+        genres: [],
+        moods: [],
+    });
+    const [infoVisible, setInfoVisible] = useState(false);
+    const [infoTitle, setInfoTitle] = useState("");
+    const [infoDescription, setInfoDescription] = useState("");
 
-    React.useEffect(() => {
-        let mounted = true;
+    useFocusEffect(
+        useCallback(() => {
+            let mounted = true;
 
-        const loadProfile = async () => {
-            setProfileLoading(true);
-            setProfileError(null);
+            const loadProfile = async () => {
+                setProfileLoading(true);
+                setProfileError(null);
 
-            try {
-                const [profile, liked] = await Promise.all([
-                    getMe(),
-                    getLikedSongs(6),
-                ]);
+                try {
+                    const [profile, storedPreferences] = await Promise.all([
+                        getMe(),
+                        getStoredPreferences(),
+                    ]);
 
-                if (mounted) {
-                    await setUserProfile(profile);
-                    setLikedSongs(liked.map(mapSongDtoToSong));
+                    if (mounted) {
+                        await setUserProfile(profile);
+                        setPreferences(storedPreferences);
+                    }
+                } catch (error) {
+                    if (mounted) {
+                        setProfileError(
+                            error instanceof Error ? error.message : 'Could not load profile.'
+                        );
+                    }
+                } finally {
+                    if (mounted) {
+                        setProfileLoading(false);
+                    }
                 }
-            } catch (error) {
-                if (mounted) {
-                    setProfileError(
-                        error instanceof Error ? error.message : 'Could not load profile.'
-                    );
-                }
-            } finally {
-                if (mounted) {
-                    setProfileLoading(false);
-                }
-            }
-        };
+            };
 
-        void loadProfile();
+            void loadProfile();
 
-        return () => {
-            mounted = false;
-        };
-    }, []);
+            return () => {
+                mounted = false;
+            };
+        }, [])
+    );
 
     // HANDLERS
     const handleEditProfile = () => {
@@ -78,75 +85,74 @@ const ProfileTab: React.FC = () => {
         setLoading(true);
 
         try {
+            await dismissPlayer();
             await logout();
-            Alert.alert('Logged out', 'You have been signed out.');
+            setInfoTitle('Logged out');
+            setInfoDescription('You have been signed out.');
+            setInfoVisible(true);
         } catch (error) {
-            Alert.alert('Error', 'Logout failed');
+            setInfoTitle('Error');
+            setInfoDescription('Logout failed');
+            setInfoVisible(true);
         } finally {
             setLoading(false);
             setShowModal(false);
         }
     };
 
+    const showAboutApp = () => {
+        setInfoTitle('About App');
+        setInfoDescription('Music Mobile\nVersion 1.0.0');
+        setInfoVisible(true);
+    };
+
+    const summarizePreferences = () => {
+        const parts = [
+            preferences.artists.length ? `${preferences.artists.length} artists` : null,
+            preferences.genres.length ? `${preferences.genres.length} genres` : null,
+        ].filter(Boolean);
+
+        return parts.length > 0
+            ? parts.join(' • ')
+            : 'Choose artists and genres';
+    };
+
     return (
-        <SafeAreaView
-            style={styles.container}
-            edges={['left', 'right', 'bottom']}
-        >
+        <View style={styles.container}>
             <ScrollView
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
             >
-                {/* HEADER */}
                 <ProfileHeader
                     username={user?.username || user?.email || 'Profile'}
                     email={user?.email || ''}
+                    avatarUrl={user?.avatarUrl}
                     onEditPress={handleEditProfile}
                 />
 
                 {profileLoading && <ActivityIndicator size="small" color="#FF4D6D" />}
                 {profileError && <Text style={styles.stateText}>{profileError}</Text>}
 
-                {/* LIKED SONGS */}
                 <View style={styles.section}>
-                    <SectionHeader
-                        title="Liked Songs"
-                        onSeeAllPress={() =>
-                            navigation.navigate('SongList', {
-                                title: 'Liked Songs',
-                                sourceType: 'liked',
-                            })
-                        }
-                    />
-                    {likedSongs.map(s => (
-                        <SongCard
-                            key={s.id}
-                            item={s}
-                            onPress={() => navigation.navigate('Player', { songId: s.id })}
-                        />
-                    ))}
-                    {!profileLoading && likedSongs.length === 0 && (
-                        <Text style={styles.stateText}>No liked songs yet.</Text>
-                    )}
-                </View>
-
-                {/* PREFERENCES */}
-                <View style={[styles.section, styles.settingsSection]}>
                     <SectionHeader title="Preferences" hideViewAll />
                     <PreferencesListItem
-                        title="Favorite Artists"
-                        onPress={() => navigation.navigate('Preferences')}
-                    />
-                    <PreferencesListItem
-                        title="Favorite Genres"
-                        onPress={() => navigation.navigate('Preferences')}
-                    />
-                    <PreferencesListItem
-                        title="Favorite Moods"
+                        title="Music Preferences"
+                        subtitle={summarizePreferences()}
+                        icon="tune"
                         onPress={() => navigation.navigate('Preferences')}
                     />
                 </View>
 
-                {/* LOGOUT */}
+                <View style={styles.section}>
+                    <SectionHeader title="Support" hideViewAll />
+                    <PreferencesListItem
+                        title="About App"
+                        subtitle="Version, credits, and app info"
+                        icon="info"
+                        onPress={showAboutApp}
+                    />
+                </View>
+
                 <View style={styles.divider} />
 
                 <View style={styles.logoutSection}>
@@ -168,7 +174,21 @@ const ProfileTab: React.FC = () => {
                 onCancel={() => setShowModal(false)}
                 onConfirm={handleLogoutConfirm}
             />
-        </SafeAreaView>
+            <AppModal
+                visible={infoVisible}
+                title={infoTitle}
+                description={infoDescription}
+                confirmText="OK"
+                onCancel={() => setInfoVisible(false)}
+                onConfirm={() => {
+                    setInfoVisible(false);
+                    // after successful logout, navigate to Login
+                    if (infoTitle === 'Logged out') {
+                        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+                    }
+                }}
+            />
+        </View>
     );
 };
 
@@ -178,14 +198,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    scrollContent: {
+        paddingBottom: 140,
+    },
     section: {
         marginTop: 24,
-    },
-    settingsSection: {
-        marginTop: 32,
-        paddingTop: 16,
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.08)',
     },
     divider: {
         height: 1,

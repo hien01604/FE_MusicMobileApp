@@ -7,14 +7,16 @@ type LibrarySongItemProps = {
     song: Song;
     isPlaying?: boolean;
     onPress: (song: Song) => void;
-    onMenuPress: (song: Song) => void;
+    onToggleLike: (song: Song) => void;
+    onAddToPlaylist: (song: Song) => void;
 };
 
 const LibrarySongItemComponent = ({
     song,
     isPlaying = false,
     onPress,
-    onMenuPress,
+    onToggleLike,
+    onAddToPlaylist,
 }: LibrarySongItemProps) => {
     return (
         <Pressable
@@ -33,19 +35,30 @@ const LibrarySongItemComponent = ({
 
             {isPlaying && <Text style={styles.badge}>Playing</Text>}
 
-            <Pressable
-                hitSlop={10}
-                style={({ pressed }) => [
-                    styles.menuButton,
-                    pressed && styles.menuButtonPressed,
-                ]}
-                onPress={(event) => {
-                    event.stopPropagation();
-                    onMenuPress(song);
-                }}
-            >
-                <MaterialIcons name="more-vert" size={20} color="#FFFFFF" />
-            </Pressable>
+            <View style={styles.statusIcons}>
+                <Pressable
+                    hitSlop={8}
+                    onPress={(event) => {
+                        event.stopPropagation();
+                        onToggleLike(song);
+                    }}
+                >
+                    <MaterialIcons name="favorite" size={18} color="#FF4D6D" />
+                </Pressable>
+                <Pressable
+                    hitSlop={8}
+                    onPress={(event) => {
+                        event.stopPropagation();
+                        onAddToPlaylist(song);
+                    }}
+                >
+                    <MaterialIcons
+                        name="playlist-add"
+                        size={18}
+                        color={song.isInPlaylist ? '#7CF7B0' : 'rgba(255,255,255,0.55)'}
+                    />
+                </Pressable>
+            </View>
         </Pressable>
     );
 };
@@ -91,11 +104,10 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '700',
     },
-    menuButton: {
-        padding: 8,
-        marginLeft: 8,
-    },
-    menuButtonPressed: {
-        opacity: 0.6,
+    statusIcons: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginLeft: 10,
     },
 });

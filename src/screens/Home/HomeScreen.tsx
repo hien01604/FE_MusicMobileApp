@@ -9,8 +9,8 @@ import ProfileTab from './ProfileTab';
 import { SearchTab } from '../Home/SearchTab';
 
 const TAB_COMPONENTS: Record<HeaderTab, React.ComponentType> = {
-    Library: LibraryTab,
     Home: HomeTab,
+    Library: LibraryTab,
     Search: SearchTab,
     Profile: ProfileTab,
 };

@@ -1,15 +1,18 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import AppModal from '../../components/common/AppModal';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import ArtistCard from '../../components/Music/ArtistCard';
 import HorizontalList from '../../components/Music/HorizontalList';
-import SongOptionsModal from '../../components/Music/SongOptionsModal';
 import { SongListItem } from '../../components/Music/SongListItem';
 import SearchBar from '../../components/common/SearchBar';
-import { mapSongDtoToSong } from '../../services/song.service';
+import AddToPlaylistModal from '../../components/common/AddToPlaylistModal';
+import { applyLikedStatus, mapSongDtoToSong } from '../../services/song.service';
 import { searchMusic } from '../../services/search.service';
+import { likeSong, unlikeSong } from '../../services/users.service';
 import { usePlayerStore } from '../../store/playerStore';
+import { publishSongPatch, subscribeSongPatches } from '../../services/songState.events';
 import type { Artist, Song } from '../../types';
 import type { RootStackParamList } from '../../navigation/type';
 
@@ -22,8 +25,12 @@ const SearchTabComponent = () => {
     const [artists, setArtists] = useState<Artist[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+    const [playlistSong, setPlaylistSong] = useState<Song | null>(null);
+    const [infoVisible, setInfoVisible] = useState(false);
+    const [infoTitle, setInfoTitle] = useState('');
+    const [infoDescription, setInfoDescription] = useState('');
     const playSong = usePlayerStore((state) => state.playSong);
+    const updateSongById = usePlayerStore((state) => state.updateSongById);
     const trimmedQuery = query.trim();
 
     useEffect(() => {
@@ -41,9 +48,9 @@ const SearchTabComponent = () => {
 
         const timeoutId = setTimeout(() => {
             searchMusic(trimmedQuery, 20)
-                .then((result) => {
+                .then(async (result) => {
                     if (!isCancelled) {
-                        setSongs(result.songs.map(mapSongDtoToSong));
+                        setSongs(await applyLikedStatus(result.songs.map(mapSongDtoToSong)));
                         setArtists(result.artists);
                     }
                 })
@@ -68,13 +75,45 @@ const SearchTabComponent = () => {
     }, [trimmedQuery]);
 
     const handleSongPress = useCallback((song: Song) => {
-        void playSong(song);
+        void playSong(song, songs);
         navigation.navigate('Player', { songId: song.id });
-    }, [navigation, playSong]);
+    }, [navigation, playSong, songs]);
 
     const handleArtistPress = useCallback((artist: Artist) => {
         navigation.navigate('ArtistDetail', { artistId: artist.id });
     }, [navigation]);
+
+    const applySongState = useCallback((songId: string, patch: Partial<Song>) => {
+        setSongs((currentSongs) =>
+            currentSongs.map((song) => (song.id === songId ? { ...song, ...patch } : song))
+        );
+        updateSongById(songId, patch);
+    }, [updateSongById]);
+
+    useEffect(() => subscribeSongPatches(applySongState), [applySongState]);
+
+    const updateSongState = useCallback((songId: string, patch: Partial<Song>) => {
+        applySongState(songId, patch);
+        publishSongPatch(songId, patch);
+    }, [applySongState]);
+
+    const handleToggleLike = useCallback(async (song: Song) => {
+        const nextLiked = !song.isLiked;
+        updateSongState(song.id, { isLiked: nextLiked });
+
+        try {
+            if (!nextLiked) {
+                await unlikeSong(song.id);
+            } else {
+                await likeSong({ songId: song.id });
+            }
+        } catch {
+            updateSongState(song.id, { isLiked: Boolean(song.isLiked) });
+            setInfoTitle('Error');
+            setInfoDescription('Could not update liked songs.');
+            setInfoVisible(true);
+        }
+    }, [updateSongState]);
 
     const renderEmptyState = () => {
         if (isLoading) {
@@ -143,18 +182,34 @@ const SearchTabComponent = () => {
                 <SongListItem
                     song={item}
                     onPress={handleSongPress}
-                    onMenuPress={setSelectedSong}
+                    onToggleLike={handleToggleLike}
+                    onAddToPlaylist={setPlaylistSong}
                 />
             )}
             ListEmptyComponent={renderEmptyState}
             ListFooterComponent={
-                <SongOptionsModal
-                    visible={Boolean(selectedSong)}
-                    song={selectedSong}
-                    onClose={() => setSelectedSong(null)}
-                    onSuccess={(message) => Alert.alert('Done', message)}
-                    onError={(message) => Alert.alert('Error', message)}
-                />
+                <>
+                    <AddToPlaylistModal
+                        visible={Boolean(playlistSong)}
+                        song={playlistSong}
+                        onClose={() => setPlaylistSong(null)}
+                        onAdded={(song) => updateSongState(song.id, { isInPlaylist: true })}
+                        onRemoved={(song) => updateSongState(song.id, { isInPlaylist: false })}
+                        onError={(message) => {
+                            setInfoTitle('Error');
+                            setInfoDescription(message);
+                            setInfoVisible(true);
+                        }}
+                    />
+                    <AppModal
+                        visible={infoVisible}
+                        title={infoTitle}
+                        description={infoDescription}
+                        confirmText="OK"
+                        onCancel={() => setInfoVisible(false)}
+                        onConfirm={() => setInfoVisible(false)}
+                    />
+                </>
             }
         />
     );
