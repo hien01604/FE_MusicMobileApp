@@ -63,8 +63,8 @@ GET /songs/new
 GET /artists  
 GET /artists/:id  
 
-POST /artists/:id/follow  
-DELETE /artists/:id/follow  
+POST /artists/:id/  
+DELETE /artists/:id/  
 
 ---
 
@@ -160,5 +160,5 @@ Feature → API
 - Playlist → /playlists  
 - History → /player/play  
 - Recommendation → /recommendations  
-- Follow artist → /artists/:id/follow  
+-  artist → /artists/:id/  
 - Auth → /auth/*  
