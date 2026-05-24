@@ -10,7 +10,7 @@ export const welcomeStyles_1 = StyleSheet.create({
         flex: 1,
         alignItems: "center",
         // justifyContent: "center",
-        marginTop: 120,
+        marginTop: 80,
         paddingHorizontal: 30,
     },
 
@@ -21,17 +21,17 @@ export const welcomeStyles_1 = StyleSheet.create({
     },
 
     heading: {
-        fontSize: 32,
+        fontSize: 24,
         color: "white",
-        marginBottom: 20,
+        marginBottom: 10,
         fontFamily: SAIRA_STENCIL_ONE_REGULAR,
         textAlign: "center",
     },
 
     subHeading: {
-        fontSize: 16,
+        fontSize: 14,
         color: "#B0B3C7",
-        marginBottom: 30,
+        marginBottom: 18,
         fontFamily: OPENSANS_REGULAR,
         textAlign: "center",
     },

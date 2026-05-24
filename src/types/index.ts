@@ -10,11 +10,27 @@ export interface Song {
     id: string;
     title: string;
     artist: string;
+    artistId?: string;
+    genreId?: string;
     image: string;
     duration?: number;
     audioUrl?: string;
     streamUrl?: string;
+    releaseDate?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+    playCount?: number;
     isLiked?: boolean;
+    isInPlaylist?: boolean;
+}
+
+export interface Playlist {
+    id: string;
+    name: string;
+    thumbnail?: string;
+    songCount?: number;
+    songs?: Song[];
+    createdAt?: string;
 }
 
 export interface Artist {
@@ -28,6 +44,7 @@ export type SongListType = 'all' | 'new' | 'trending' | 'continueListening' | 'r
 
 export type SongListSourceType =
     | SongListType
+    | 'recent'
     | 'liked'
     | 'search'
     | 'section'
