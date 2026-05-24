@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Song } from '../../../types';
-import { mapSongDtoToSong } from '../../../services/song.service';
-import { getLikedSongs } from '../../../services/users.service';
+import { getLikedSongs } from '../../../services/song.service';
+import { subscribeSongPatches } from '../../../services/songState.events';
 
 type UseLikedSongsResult = {
     songs: Song[];
@@ -9,6 +9,7 @@ type UseLikedSongsResult = {
     error: string | null;
     refresh: () => Promise<void>;
     removeSong: (songId: string) => void;
+    updateSong: (songId: string, patch: Partial<Song>) => void;
 };
 
 export function useLikedSongs(limit = 50): UseLikedSongsResult {
@@ -21,8 +22,7 @@ export function useLikedSongs(limit = 50): UseLikedSongsResult {
         setError(null);
 
         try {
-            const result = await getLikedSongs(limit);
-            setSongs(result.map(mapSongDtoToSong));
+            setSongs(await getLikedSongs(limit));
         } catch {
             setSongs([]);
             setError('Could not load liked songs.');
@@ -35,8 +35,30 @@ export function useLikedSongs(limit = 50): UseLikedSongsResult {
         void loadSongs();
     }, [loadSongs]);
 
+    useEffect(
+        () =>
+            subscribeSongPatches((songId, patch) => {
+                setSongs((current) => {
+                    if (patch.isLiked === false) {
+                        return current.filter((song) => song.id !== songId);
+                    }
+
+                    return current.map((song) =>
+                        song.id === songId ? { ...song, ...patch } : song
+                    );
+                });
+            }),
+        []
+    );
+
     const removeSong = useCallback((songId: string) => {
         setSongs((current) => current.filter((song) => song.id !== songId));
+    }, []);
+
+    const updateSong = useCallback((songId: string, patch: Partial<Song>) => {
+        setSongs((current) =>
+            current.map((song) => (song.id === songId ? { ...song, ...patch } : song))
+        );
     }, []);
 
     return {
@@ -45,5 +67,6 @@ export function useLikedSongs(limit = 50): UseLikedSongsResult {
         error,
         refresh: loadSongs,
         removeSong,
+        updateSong,
     };
 }

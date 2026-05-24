@@ -4,8 +4,14 @@ import { SAIRA_STENCIL_ONE_REGULAR } from "../../utils/const";
 export const welcomeStyles_3 = StyleSheet.create({
     container: {
         flex: 1,
-        marginTop: 60,
-        justifyContent: "space-between",
+        marginTop: 0,
+        paddingHorizontal: 30,
+        width: "100%",
+    },
+
+    scrollContent: {
+        paddingBottom: 220,
+        paddingTop: 4,
     },
 
     content: {
@@ -17,6 +23,7 @@ export const welcomeStyles_3 = StyleSheet.create({
         flexWrap: "wrap",
         justifyContent: "space-between",
         width: "100%",
+        marginTop: 8,
     },
 
     card: {
@@ -24,6 +31,10 @@ export const welcomeStyles_3 = StyleSheet.create({
         height: 100,
         borderRadius: 14,
         marginBottom: 16,
+        overflow: "hidden",
+        backgroundColor: "rgba(255,255,255,0.08)",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.08)",
     },
 
     cardSelected: {
@@ -31,6 +42,12 @@ export const welcomeStyles_3 = StyleSheet.create({
         borderColor: "#FF3C57",
     },
 
+    cardContent: {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 10,
+    },
     cardText: {
         color: "white",
         fontFamily: SAIRA_STENCIL_ONE_REGULAR,
@@ -39,28 +56,16 @@ export const welcomeStyles_3 = StyleSheet.create({
         justifyContent: "center",
         marginBottom: 3,
     },
-    cardImage: {
-        flex: 1,
-        justifyContent: "flex-end",
-    },
-
-    overlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: "rgba(0,0,0,0.20)",
-        borderRadius: 14,
+    cardIcon: {
+        color: "#FFFFFF",
+        fontSize: 20,
+        marginBottom: 8,
+        textAlign: "center",
     },
 
     checkIcon: {
         position: "absolute",
         top: 8,
         right: 8
-    },
-    gradient: {
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: "30%",
-        borderRadius: 14,
     },
 });

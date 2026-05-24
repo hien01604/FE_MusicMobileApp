@@ -11,9 +11,30 @@ export type LikeSongPayload = {
     songId: string;
 };
 
+export type ListeningHistoryItemDto = {
+    song?: SongDto;
+    played_at?: string;
+    playedAt?: string;
+    listen_duration?: number;
+    listenDuration?: number;
+    [key: string]: unknown;
+};
+
 function unwrapResponseData<T>(data: unknown): T {
-    if (data && typeof data === 'object' && 'data' in data) {
+    if (!data || typeof data !== 'object') {
+        return data as T;
+    }
+
+    if ('data' in data) {
         return (data as { data: T }).data;
+    }
+
+    if ('history' in data) {
+        return (data as { history: T }).history;
+    }
+
+    if ('value' in data) {
+        return (data as { value: T }).value;
     }
 
     return data as T;
@@ -43,6 +64,27 @@ export async function getLikedSongs(limit = 20, page = 1): Promise<SongDto[]> {
     });
 
     return unwrapResponseData<SongDto[]>(response.data);
+}
+
+export async function getListeningHistory(
+    limit = 20,
+    page = 1
+): Promise<ListeningHistoryItemDto[]> {
+    const response = await api.get('/users/history', {
+        params: { page, limit },
+    });
+    const data = unwrapResponseData<unknown>(response.data);
+
+    if (Array.isArray(data)) {
+        return data as ListeningHistoryItemDto[];
+    }
+
+    if (data && typeof data === 'object' && 'history' in data) {
+        const history = (data as { history?: unknown }).history;
+        return Array.isArray(history) ? (history as ListeningHistoryItemDto[]) : [];
+    }
+
+    return [];
 }
 
 export async function likeSong(payload: LikeSongPayload): Promise<void> {

@@ -82,15 +82,18 @@ export default function AppModal({
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.65)',
+        backgroundColor: 'rgba(4, 7, 24, 0.65)',
         justifyContent: 'center',
         alignItems: 'center',
+        paddingHorizontal: 22,
     },
     container: {
-        width: '85%',
-        backgroundColor: '#1a1d3a',
-        borderRadius: 16,
+        width: '100%',
+        backgroundColor: '#151A35',
+        borderRadius: 18,
         padding: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.12)',
     },
     title: {
         color: '#fff',
@@ -109,17 +112,20 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     cancelBtn: {
-        paddingVertical: 8,
+        borderRadius: 10,
+        backgroundColor: 'rgba(255,255,255,0.07)',
+        paddingVertical: 10,
         paddingHorizontal: 16,
     },
     cancelText: {
-        color: '#aaa',
+        color: '#DCE4FF',
+        fontWeight: '700',
     },
     confirmBtn: {
         backgroundColor: '#4c6ef5',
-        paddingVertical: 8,
+        paddingVertical: 10,
         paddingHorizontal: 16,
-        borderRadius: 8,
+        borderRadius: 10,
     },
     dangerBtn: {
         backgroundColor: '#ff4d6d',

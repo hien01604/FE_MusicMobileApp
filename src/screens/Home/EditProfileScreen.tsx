@@ -7,9 +7,9 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     StyleSheet,
-    Animated,
-    Alert,
+    Animated
 } from "react-native";
+import AppModal from "../../components/common/AppModal";
 import { useNavigation } from "@react-navigation/native";
 import Layout from "../../components/common/Layout";
 import BackButton from "../../components/common/BackButton";
@@ -27,6 +27,9 @@ export default function EditProfileScreen() {
     const [email] = useState(user?.email || "");
 
     const [loading, setLoading] = useState(false);
+    const [infoVisible, setInfoVisible] = useState(false);
+    const [infoTitle, setInfoTitle] = useState("");
+    const [infoDescription, setInfoDescription] = useState("");
     const [error, setError] = useState("");
 
     // animation giống Home
@@ -61,10 +64,9 @@ export default function EditProfileScreen() {
             setError("");
 
             const updatedUser = await updateMe({ username: username.trim() });
-            await setUserProfile(updatedUser);
-
-            Alert.alert("Profile updated", "Your profile has been saved.");
-            navigation.goBack();
+            setInfoTitle("Profile updated");
+            setInfoDescription("Your profile has been saved.");
+            setInfoVisible(true);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Update failed");
         } finally {
@@ -142,6 +144,17 @@ export default function EditProfileScreen() {
                         </View>
 
                         {error && <Text style={styles.error}>{error}</Text>}
+                        <AppModal
+                            visible={infoVisible}
+                            title={infoTitle}
+                            description={infoDescription}
+                            confirmText="OK"
+                            onCancel={() => setInfoVisible(false)}
+                            onConfirm={() => {
+                                setInfoVisible(false);
+                                navigation.goBack();
+                            }}
+                        />
                     </ScrollView>
                 </Animated.View>
             </View>

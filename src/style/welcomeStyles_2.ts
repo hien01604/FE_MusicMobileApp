@@ -2,12 +2,14 @@ import { StyleSheet } from "react-native";
 export const welcomeStyles_2 = StyleSheet.create({
     container: {
         flex: 1,
-        marginTop: 60,
+        marginTop: 0,
+        width: "100%",
     },
 
     content: {
         alignItems: "center",
-
+        flex: 1,
+        width: "100%",
     },
 
     genreContainer: {
@@ -15,6 +17,8 @@ export const welcomeStyles_2 = StyleSheet.create({
         flexWrap: "wrap",
         gap: 10,
         justifyContent: "center",
+        paddingBottom: 140,
+        width: "100%",
     },
 
     genreButton: {

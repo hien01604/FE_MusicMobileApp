@@ -9,11 +9,15 @@ import {
     View,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import type { Song } from '../../types';
 import { likeSong, unlikeSong } from '../../services/users.service';
 import { usePlayerStore } from '../../store/playerStore';
+import AddToPlaylistModal from '../common/AddToPlaylistModal';
+import { publishSongPatch } from '../../services/songState.events';
+import { searchArtists } from '../../services/artists.service';
 
-type SongOptionId = 'queue' | 'liked';
+type SongOptionId = 'liked' | 'playlist' | 'artist';
 
 type SongOption = {
     id: SongOptionId;
@@ -32,8 +36,9 @@ type Props = {
 };
 
 const options: SongOption[] = [
-    { id: 'queue', label: 'Add to Queue', icon: 'queue-music' },
     { id: 'liked', label: 'Add to Liked Songs', icon: 'favorite' },
+    { id: 'playlist', label: 'Add to Playlist', icon: 'playlist-add' },
+    { id: 'artist', label: 'View Artist', icon: 'person' },
 ];
 
 export default function SongOptionsModal({
@@ -42,14 +47,35 @@ export default function SongOptionsModal({
     onClose,
     onSuccess,
     onError,
-    isLiked = false,
+    isLiked,
     onLikedChange,
 }: Props) {
+    const navigation = useNavigation<any>();
     const [loadingAction, setLoadingAction] = useState<SongOptionId | null>(null);
-    const addToQueue = usePlayerStore((state) => state.addToQueue);
+    const [isPlaylistModalVisible, setIsPlaylistModalVisible] = useState(false);
+    const updateSongById = usePlayerStore((state) => state.updateSongById);
+    const liked = isLiked ?? song?.isLiked ?? false;
 
     const closeModal = () => {
         onClose();
+    };
+
+    const getSongArtistId = async (currentSong: Song): Promise<string | null> => {
+        if (currentSong.artistId) {
+            return currentSong.artistId;
+        }
+
+        const [artistName] = currentSong.artist.split(',').map((name) => name.trim()).filter(Boolean);
+        if (!artistName || artistName === 'Unknown Artist') {
+            return null;
+        }
+
+        const artists = await searchArtists({ q: artistName, limit: 5 });
+        const matchedArtist =
+            artists.find((artist) => artist.name.toLowerCase() === artistName.toLowerCase()) ??
+            artists[0];
+
+        return matchedArtist?.id ?? null;
     };
 
     const runAction = async (action: SongOptionId) => {
@@ -57,28 +83,57 @@ export default function SongOptionsModal({
             return;
         }
 
+        if (action === 'playlist') {
+            setIsPlaylistModalVisible(true);
+            return;
+        }
+
+        if (action === 'artist') {
+            setLoadingAction(action);
+            try {
+                const artistId = await getSongArtistId(song);
+
+                if (!artistId) {
+                    onError?.('Artist detail is not available for this song.');
+                    return;
+                }
+
+                updateSongById(song.id, { artistId });
+                closeModal();
+                navigation.navigate('ArtistDetail', { artistId });
+            } catch {
+                onError?.('Could not open artist detail.');
+            } finally {
+                setLoadingAction(null);
+            }
+            return;
+        }
+
         setLoadingAction(action);
 
         try {
-            if (action === 'queue') {
-                await addToQueue(song);
-                onSuccess?.('Added to queue.');
-            }
-
             if (action === 'liked') {
-                if (isLiked) {
+                const nextLiked = !liked;
+                onLikedChange?.(song, nextLiked);
+                updateSongById(song.id, { isLiked: nextLiked });
+                publishSongPatch(song.id, { isLiked: nextLiked });
+
+                if (liked) {
                     await unlikeSong(song.id);
-                    onLikedChange?.(song, false);
                     onSuccess?.('Removed from liked songs.');
                 } else {
                     await likeSong({ songId: song.id });
-                    onLikedChange?.(song, true);
                     onSuccess?.('Added to liked songs.');
                 }
             }
 
             closeModal();
         } catch {
+            if (action === 'liked') {
+                onLikedChange?.(song, liked);
+                updateSongById(song.id, { isLiked: liked });
+                publishSongPatch(song.id, { isLiked: liked });
+            }
             onError?.('Could not update this song. Please try again.');
         } finally {
             setLoadingAction(null);
@@ -114,18 +169,19 @@ export default function SongOptionsModal({
                         {options.map((item) => {
                             const isLoading = loadingAction === item.id;
                             const label =
-                                item.id === 'liked' && isLiked
+                                item.id === 'liked' && liked
                                     ? 'Remove from Liked Songs'
                                     : item.label;
+                            const disabled = Boolean(loadingAction);
 
                             return (
                                 <Pressable
                                     key={item.id}
-                                    disabled={Boolean(loadingAction)}
+                                    disabled={disabled}
                                     style={({ pressed }) => [
                                         styles.optionItem,
                                         pressed && styles.optionItemPressed,
-                                        loadingAction && styles.optionItemDisabled,
+                                        disabled && styles.optionItemDisabled,
                                     ]}
                                     onPress={() => {
                                         void runAction(item.id);
@@ -147,6 +203,23 @@ export default function SongOptionsModal({
                     </View>
                 </Pressable>
             </Pressable>
+
+            <AddToPlaylistModal
+                visible={isPlaylistModalVisible}
+                song={song}
+                onClose={() => setIsPlaylistModalVisible(false)}
+                onAdded={(addedSong, playlist) => {
+                    updateSongById(addedSong.id, { isInPlaylist: true });
+                    publishSongPatch(addedSong.id, { isInPlaylist: true });
+                    onSuccess?.(`Added to ${playlist.name}.`);
+                }}
+                onRemoved={(removedSong) => {
+                    updateSongById(removedSong.id, { isInPlaylist: false });
+                    publishSongPatch(removedSong.id, { isInPlaylist: false });
+                    onSuccess?.('Removed from playlist.');
+                }}
+                onError={onError}
+            />
         </Modal>
     );
 }

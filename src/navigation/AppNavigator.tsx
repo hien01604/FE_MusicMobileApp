@@ -13,7 +13,6 @@ import SongListScreen from "../screens/Home/SongListScreen";
 import WelcomeScreen_1 from "../screens/Welcome/WelcomeScreen_1";
 import WelcomeScreen_2 from "../screens/Welcome/WelcomeScreen_2";
 import WelcomeScreen_3 from "../screens/Welcome/WelcomeScreen_3";
-import WelcomeScreen_4 from "../screens/Welcome/WelcomeScreen_4";
 import ProfileTab from "../screens/Home/ProfileTab";
 import { SearchTab } from "../screens/Home/SearchTab";
 import PlayerScreen from "../screens/Player/PlayerScreen";
@@ -21,10 +20,17 @@ import MiniPlayer from "../components/Player/MiniPlayer";
 import EditProfileScreen from "../screens/Home/EditProfileScreen";
 import PreferencesScreen from "../screens/Home/PreferencesScreen";
 import ArtistDetailScreen from "../screens/Artist/ArtistDetailScreen";
+import ArtistsScreen from "../screens/Artist/ArtistsScreen";
+import FollowedArtistsScreen from "../screens/Artist/FollowedArtistsScreen";
+import PlaylistDetailScreen from "../screens/Home/PlaylistDetailScreen";
+import PlaylistsScreen from "../screens/Home/PlaylistsScreen";
+import AIVibeMixScreen from "../screens/Home/AIVibeMixScreen";
+import TasteProfileScreen from "../screens/Home/TasteProfileScreen";
 
-import { useAuthContext } from "../contexts/AuthContext"; 
+import { useAuthContext } from "../contexts/AuthContext";
 import type { RootStackParamList } from "./type";
 import { usePlayerStore } from "../store/playerStore";
+import { hasOpenedAppBefore, markAppOpened } from "../services/appLaunch.storage";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
@@ -32,6 +38,8 @@ export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 export default function AppNavigator() {
     const { isAuthenticated, isLoading } = useAuthContext(); // 🔥 FIX
     const [isSplashFinished, setSplashFinished] = React.useState(false);
+    const [launchChecked, setLaunchChecked] = React.useState(false);
+    const [isFirstOpen, setIsFirstOpen] = React.useState(false);
     const [currentRouteName, setCurrentRouteName] = React.useState<string | undefined>();
     const initPlayerSync = usePlayerStore((state) => state.initPlayerSync);
 
@@ -39,8 +47,31 @@ export default function AppNavigator() {
         void initPlayerSync();
     }, [initPlayerSync]);
 
+    React.useEffect(() => {
+        let mounted = true;
+
+        const loadLaunchState = async () => {
+            const openedBefore = await hasOpenedAppBefore();
+
+            if (!openedBefore) {
+                await markAppOpened();
+            }
+
+            if (mounted) {
+                setIsFirstOpen(!openedBefore);
+                setLaunchChecked(true);
+            }
+        };
+
+        void loadLaunchState();
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
     // loading + splash
-    if (isLoading || !isSplashFinished) {
+    if (isLoading || !launchChecked || !isSplashFinished) {
         return (
             <SplashScreen
                 showLoadingText={true}
@@ -50,6 +81,7 @@ export default function AppNavigator() {
     }
 
     const shouldShowAuthFlow = !isAuthenticated;
+    const authInitialRouteName = "Welcome_1";
 
     return (
         <NavigationContainer
@@ -63,7 +95,7 @@ export default function AppNavigator() {
         >
             <Stack.Navigator
                 key={shouldShowAuthFlow ? "auth-flow" : "app-flow"}
-                initialRouteName={shouldShowAuthFlow ? "Login" : "Home"}
+                initialRouteName={shouldShowAuthFlow ? authInitialRouteName : "Home"}
                 screenOptions={{
                     headerShown: false,
                     animation: "slide_from_right",
@@ -74,7 +106,6 @@ export default function AppNavigator() {
                         <Stack.Screen name="Welcome_1" component={WelcomeScreen_1} />
                         <Stack.Screen name="Welcome_2" component={WelcomeScreen_2} />
                         <Stack.Screen name="Welcome_3" component={WelcomeScreen_3} />
-                        <Stack.Screen name="Welcome_4" component={WelcomeScreen_4} />
 
                         <Stack.Screen name="Login" component={LoginScreen} />
                         <Stack.Screen name="SignUp" component={SignUpScreen} />
@@ -85,11 +116,17 @@ export default function AppNavigator() {
                     <>
                         <Stack.Screen name="Home" component={HomeScreen} />
                         <Stack.Screen name="SongList" component={SongListScreen} />
+                        <Stack.Screen name="Playlists" component={PlaylistsScreen} />
+                        <Stack.Screen name="PlaylistDetail" component={PlaylistDetailScreen} />
                         <Stack.Screen name="Profile" component={ProfileTab} />
                         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
                         <Stack.Screen name="Preferences" component={PreferencesScreen} />
+                        <Stack.Screen name="Artists" component={ArtistsScreen} />
+                        <Stack.Screen name="FollowedArtists" component={FollowedArtistsScreen} />
                         <Stack.Screen name="ArtistDetail" component={ArtistDetailScreen} />
                         <Stack.Screen name="Search" component={SearchTab} />
+                        <Stack.Screen name="AIVibeMix" component={AIVibeMixScreen} />
+                        <Stack.Screen name="TasteProfile" component={TasteProfileScreen} />
                         <Stack.Screen
                             name="Player"
                             component={PlayerScreen}

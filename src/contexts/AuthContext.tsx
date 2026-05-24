@@ -79,6 +79,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                     setUser(profile);
                 }
             } catch (err) {
+                await clearAuthData();
+                setAccessToken(null);
+                setRefreshToken(null);
+                setUser(null);
                 setError(err instanceof Error ? err.message : "Failed to restore auth session");
             } finally {
                 setIsLoading(false);

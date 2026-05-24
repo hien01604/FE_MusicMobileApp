@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     FlatList,
     StyleSheet,
     Text,
     View,
 } from 'react-native';
+import AppModal from '../../components/common/AppModal';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,13 +14,15 @@ import { MaterialIcons } from '@expo/vector-icons';
 import BackButton from '../../components/common/BackButton';
 import Layout from '../../components/common/Layout';
 import { SongListItem } from '../../components/Music/SongListItem';
-import SongOptionsModal from '../../components/Music/SongOptionsModal';
 import { getSongsBySource } from '../../services/song.service';
+import { likeSong, unlikeSong } from '../../services/users.service';
 import type { Song, SongListSource } from '../../types';
 import type { RootStackParamList } from '../../navigation/type';
 import SearchBar from '../../components/common/SearchBar';
+import AddToPlaylistModal from '../../components/common/AddToPlaylistModal';
 import { SAIRA_STENCIL_ONE_REGULAR } from '../../../utils/const';
 import { usePlayerStore } from '../../store/playerStore';
+import { publishSongPatch, subscribeSongPatches } from '../../services/songState.events';
 
 type SongListScreenProps = NativeStackScreenProps<RootStackParamList, 'SongList'>;
 type SongListNavigation = NativeStackNavigationProp<RootStackParamList>;
@@ -35,9 +37,13 @@ export function SongListView({ source, onBack }: SongListViewProps) {
     const [songs, setSongs] = useState<Song[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+    const [playlistSong, setPlaylistSong] = useState<Song | null>(null);
+    const [infoVisible, setInfoVisible] = useState(false);
+    const [infoTitle, setInfoTitle] = useState('');
+    const [infoDescription, setInfoDescription] = useState('');
     const navigation = useNavigation<SongListNavigation>();
     const playSong = usePlayerStore((state) => state.playSong);
+    const updateSongById = usePlayerStore((state) => state.updateSongById);
 
     useEffect(() => {
         let isMounted = true;
@@ -86,12 +92,44 @@ export function SongListView({ source, onBack }: SongListViewProps) {
     }, [searchText, songs]);
 
     const handleSongPress = (song: Song) => {
-        void playSong(song);
+        void playSong(song, filteredSongs);
         navigation.navigate('Player', { songId: song.id });
     };
 
-    const handleMenuPress = (song: Song) => {
-        setSelectedSong(song);
+    const applySongState = (songId: string, patch: Partial<Song>) => {
+        setSongs((currentSongs) =>
+            currentSongs.map((song) => (song.id === songId ? { ...song, ...patch } : song))
+        );
+        updateSongById(songId, patch);
+    };
+
+    useEffect(() => subscribeSongPatches(applySongState), [updateSongById]);
+
+    const updateSongState = (songId: string, patch: Partial<Song>) => {
+        applySongState(songId, patch);
+        publishSongPatch(songId, patch);
+    };
+
+    const handleToggleLike = async (song: Song) => {
+        const nextLiked = !song.isLiked;
+        updateSongState(song.id, { isLiked: nextLiked });
+
+        if (!nextLiked && source.sourceType === 'liked') {
+            setSongs((currentSongs) => currentSongs.filter((item) => item.id !== song.id));
+        }
+
+        try {
+            if (!nextLiked) {
+                await unlikeSong(song.id);
+            } else {
+                await likeSong({ songId: song.id });
+            }
+        } catch {
+            updateSongState(song.id, { isLiked: Boolean(song.isLiked) });
+            setInfoTitle('Error');
+            setInfoDescription('Could not update liked songs.');
+            setInfoVisible(true);
+        }
     };
 
     return (
@@ -123,7 +161,8 @@ export function SongListView({ source, onBack }: SongListViewProps) {
                             <SongListItem
                                 song={item}
                                 onPress={handleSongPress}
-                                onMenuPress={handleMenuPress}
+                                onToggleLike={handleToggleLike}
+                                onAddToPlaylist={setPlaylistSong}
                             />
                         )}
                         showsVerticalScrollIndicator={false}
@@ -140,12 +179,25 @@ export function SongListView({ source, onBack }: SongListViewProps) {
                         }
                     />
                 )}
-                <SongOptionsModal
-                    visible={Boolean(selectedSong)}
-                    song={selectedSong}
-                    onClose={() => setSelectedSong(null)}
-                    onSuccess={(message) => Alert.alert('Done', message)}
-                    onError={(message) => Alert.alert('Error', message)}
+                <AddToPlaylistModal
+                    visible={Boolean(playlistSong)}
+                    song={playlistSong}
+                    onClose={() => setPlaylistSong(null)}
+                    onAdded={(song) => updateSongState(song.id, { isInPlaylist: true })}
+                    onRemoved={(song) => updateSongState(song.id, { isInPlaylist: false })}
+                    onError={(message) => {
+                        setInfoTitle('Error');
+                        setInfoDescription(message);
+                        setInfoVisible(true);
+                    }}
+                />
+                <AppModal
+                    visible={infoVisible}
+                    title={infoTitle}
+                    description={infoDescription}
+                    confirmText="OK"
+                    onCancel={() => setInfoVisible(false)}
+                    onConfirm={() => setInfoVisible(false)}
                 />
             </View>
         </Layout>

@@ -6,13 +6,17 @@ import type { Song } from '../../types';
 interface SongListItemProps {
     song: Song;
     onPress?: (song: Song) => void;
-    onMenuPress?: (song: Song) => void;
+    onLongPress?: (song: Song) => void;
+    onToggleLike?: (song: Song) => void;
+    onAddToPlaylist?: (song: Song) => void;
 }
 
 const SongListItemComponent = ({
     song,
     onPress,
-    onMenuPress,
+    onLongPress,
+    onToggleLike,
+    onAddToPlaylist,
 }: SongListItemProps) => {
     return (
         <Pressable
@@ -21,6 +25,7 @@ const SongListItemComponent = ({
                 pressed && styles.containerPressed,
             ]}
             onPress={() => onPress?.(song)}
+            onLongPress={() => onLongPress?.(song)}
         >
             {/* Album Cover */}
             <Image
@@ -39,24 +44,34 @@ const SongListItemComponent = ({
                 </Text>
             </View>
 
-            {/* Menu Icon */}
-            <Pressable
-                style={({ pressed }) => [
-                    styles.menuButton,
-                    pressed && styles.menuButtonPressed,
-                ]}
-                onPress={(event) => {
-                    event.stopPropagation();
-                    onMenuPress?.(song);
-                }}
-            >
-                <MaterialIcons
-                    name="more-vert"
-                    size={20}
-                    color="#FFFFFF"
-                    style={styles.menuIcon}
-                />
-            </Pressable>
+            <View style={styles.statusIcons}>
+                <Pressable
+                    hitSlop={8}
+                    onPress={(event) => {
+                        event.stopPropagation();
+                        onToggleLike?.(song);
+                    }}
+                >
+                    <MaterialIcons
+                        name={song.isLiked ? 'favorite' : 'favorite-border'}
+                        size={18}
+                        color={song.isLiked ? '#FF4D6D' : 'rgba(255,255,255,0.55)'}
+                    />
+                </Pressable>
+                <Pressable
+                    hitSlop={8}
+                    onPress={(event) => {
+                        event.stopPropagation();
+                        onAddToPlaylist?.(song);
+                    }}
+                >
+                    <MaterialIcons
+                        name="playlist-add"
+                        size={18}
+                        color={song.isInPlaylist ? '#7CF7B0' : 'rgba(255,255,255,0.55)'}
+                    />
+                </Pressable>
+            </View>
         </Pressable>
     );
 };
@@ -90,6 +105,12 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
     },
+    statusIcons: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginLeft: 8,
+    },
     title: {
         color: '#FFFFFF',
         fontSize: 15,
@@ -99,15 +120,5 @@ const styles = StyleSheet.create({
     artist: {
         color: '#9CA3AF',
         fontSize: 13,
-    },
-    menuButton: {
-        padding: 8,
-        marginLeft: 8,
-    },
-    menuButtonPressed: {
-        opacity: 0.6,
-    },
-    menuIcon: {
-        opacity: 0.7,
     },
 });
