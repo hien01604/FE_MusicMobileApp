@@ -1,27 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, Animated } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, View, Text, Pressable, Animated } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { welcomeStyles_3 } from "../../style/welcomeStyles_3";
+import { welcomeStyles_2 } from "../../style/welcomeStyles_2";
 import { welcomeStyles_1 } from "../../style/welcomeStyles_1";
-import MoodCard from "./MoodCard";
+import { PreferenceOption } from "../../constants/preferences";
 import WelcomeBottom from "./WelcomeBottom";
 import BackButton from "../common/BackButton";
 import useFadeSlideAnimation from "../../animations/useFadeSlideAnimation";
+import { getGenres } from "../../services/genres.service";
 
 type Props = {
-    onContinue: () => void;
+    onContinue: (genres: PreferenceOption[]) => void;
 };
-
-const moods = [
-    { key: "party", image: require("../../../assets/mood/party.png") },
-    { key: "chill", image: require("../../../assets/mood/chill.png") },
-    { key: "sad", image: require("../../../assets/mood/sad.png") },
-    { key: "workout", image: require("../../../assets/mood/workout.png") },
-    { key: "focus", image: require("../../../assets/mood/focus.png") },
-    { key: "sleep", image: require("../../../assets/mood/sleep.png") },
-
-
-];
 
 export default function Welcome_3({ onContinue }: Props) {
     const navigation = useNavigation();
@@ -29,11 +19,41 @@ export default function Welcome_3({ onContinue }: Props) {
 
 
     const [selected, setSelected] = useState<string[]>([]);
+    const [genres, setGenres] = useState<PreferenceOption[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
     const disabled = selected.length === 0;
+
+    useEffect(() => {
+        let mounted = true;
+
+        setLoading(true);
+        getGenres()
+            .then((result) => {
+                if (mounted) {
+                    setGenres(result);
+                    setError("");
+                }
+            })
+            .catch(() => {
+                if (mounted) {
+                    setError("Could not load genres.");
+                }
+            })
+            .finally(() => {
+                if (mounted) {
+                    setLoading(false);
+                }
+            });
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
 
     const handleContinue = () => {
         if (selected.length === 0) return;
-        onContinue();
+        onContinue(genres.filter((genre) => selected.includes(genre.id)));
     };
 
     const toggle = (item: string) => {
@@ -53,36 +73,45 @@ export default function Welcome_3({ onContinue }: Props) {
         >
             <BackButton onBack={navigation.goBack} />
 
-            <View style={welcomeStyles_3.container}>
+            <View style={welcomeStyles_2.container}>
                 {/* CONTENT */}
-                <View style={welcomeStyles_3.content}>
-                    <Text style={welcomeStyles_1.heading}>
-                        When do you usually listen to music?
+                <View style={welcomeStyles_2.content}>
+                    <Text style={welcomeStyles_1.heading}>What genres do you like?</Text>
+                    <Text style={welcomeStyles_1.subHeading}>
+                        Select at least 1 genre to personalize your music.
                     </Text>
 
-                    <View style={welcomeStyles_3.grid}>
-                        {moods.map((item) => {
-                            const isSelected = selected.includes(item.key);
+                    {loading ? (
+                        <ActivityIndicator size="small" color="#FF5F7E" />
+                    ) : error ? (
+                        <Text style={{ color: "#FF5F7E", textAlign: "center" }}>{error}</Text>
+                    ) : (
+                        <View style={welcomeStyles_2.genreContainer}>
+                            {genres.map((genre) => {
+                                const isSelected = selected.includes(genre.id);
 
-                            return (
-                                <MoodCard
-                                    key={item.key}
-                                    label={item.key}
-                                    image={item.image}
-                                    selected={isSelected}
-                                    onPress={() => toggle(item.key)}
-                                />
-                            );
-                        })}
-                    </View>
+                                return (
+                                    <Pressable
+                                        key={genre.id}
+                                        onPress={() => toggle(genre.id)}
+                                        style={[
+                                            welcomeStyles_2.genreButton,
+                                            isSelected && welcomeStyles_2.genreSelected,
+                                        ]}
+                                    >
+                                        <Text style={welcomeStyles_2.genreText}>{genre.label}</Text>
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+                    )}
                 </View>
 
                 {/* BOTTOM */}
                 <WelcomeBottom
-                    text="Continue"
+                    text="Next"
                     disabled={disabled}
                     onPress={handleContinue}
-                    onSkip={onContinue}
                     step={3}
                     total={4}
                 />

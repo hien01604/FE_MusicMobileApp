@@ -1,41 +1,34 @@
 import React from "react";
-import { Pressable, Text, ImageBackground, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { welcomeStyles_3 } from "../../style/welcomeStyles_3";
-import { LinearGradient } from "expo-linear-gradient";
 
 type Props = {
     label: string;
-    image: any;
     selected: boolean;
     onPress: () => void;
+    color?: string | null;
+    icon?: string | null;
 };
 
 export default function MoodCard({
     label,
-    image,
     selected,
     onPress,
+    color,
+    icon,
 }: Props) {
     return (
         <Pressable
             onPress={onPress}
             style={[
                 welcomeStyles_3.card,
+                color ? { backgroundColor: color } : null,
                 selected && welcomeStyles_3.cardSelected,
             ]}
         >
-            <ImageBackground
-                source={image}
-                style={welcomeStyles_3.cardImage}
-                imageStyle={{ borderRadius: 14 }}
-            >
-                <LinearGradient
-                    colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.7)"]}
-                    style={welcomeStyles_3.gradient}
-                />
-                <View style={welcomeStyles_3.overlay} />
-
+            <View style={welcomeStyles_3.cardContent}>
+                {icon ? <Text style={welcomeStyles_3.cardIcon}>{icon}</Text> : null}
                 <Text style={welcomeStyles_3.cardText}>{label}</Text>
 
                 {selected && (
@@ -46,7 +39,7 @@ export default function MoodCard({
                         style={welcomeStyles_3.checkIcon}
                     />
                 )}
-            </ImageBackground>
+            </View>
         </Pressable>
     );
 }

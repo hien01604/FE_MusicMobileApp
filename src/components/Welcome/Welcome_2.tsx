@@ -1,94 +1,133 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, Pressable, Animated } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Animated, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { welcomeStyles_2 } from "../../style/welcomeStyles_2";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import { welcomeStyles_1 } from "../../style/welcomeStyles_1";
 import WelcomeBottom from "./WelcomeBottom";
 import BackButton from "../common/BackButton";
 import useFadeSlideAnimation from "../../animations/useFadeSlideAnimation";
-import ProgressDots from "./ProgressDots";
+import ArtistGrid from "../Artist/ArtistGrid";
+import SearchBar from "../common/SearchBar";
+import { getArtists } from "../../services/artists.service";
+import type { Artist } from "../../types/artist.types";
+import type { PreferenceOption } from "../../constants/preferences";
+
+const ARTIST_PICK_LIMIT = 40;
 
 type Props = {
-    onContinue: () => void;
+    onContinue: (artists: PreferenceOption[]) => void;
+    onSkip: () => void;
 };
 
-const genres = [
-    "Pop",
-    "Indie",
-    "R&B",
-    "EDM",
-    "Rock",
-    "Lofi",
-    "Jazz",
-    "K-pop",
-    "Hip-hop",
-    "Acoustic",
-    "Rap",
-];
-
-export default function Welcome_2({ onContinue }: Props) {
-    const pressAnim = useRef(new Animated.Value(1)).current;
+export default function Welcome_2({ onContinue, onSkip }: Props) {
     const navigation = useNavigation();
     const [selected, setSelected] = useState<string[]>([]);
-    const disabled = selected.length < 3;
+    const [artists, setArtists] = useState<Artist[]>([]);
+    const [search, setSearch] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const disabled = false;
 
-    const toggleGenre = (genre: string) => {
-        if (selected.includes(genre)) {
-            setSelected(selected.filter((g) => g !== genre));
+    const toggleArtist = (artist: Artist) => {
+        if (selected.includes(artist.id)) {
+            setSelected(selected.filter((item) => item !== artist.id));
         } else {
-            setSelected([...selected, genre]);
+            setSelected([...selected, artist.id]);
         }
     };
 
     const handleContinue = () => {
-        if (selected.length < 3) return;
-
-        onContinue();
+        onContinue(
+            artists
+                .filter((artist) => selected.includes(artist.id))
+                .map((artist) => ({ id: artist.id, label: artist.name }))
+        );
     };
     const { fadeAnim, translateY } = useFadeSlideAnimation();
+
+    useEffect(() => {
+        let mounted = true;
+
+        setLoading(true);
+        getArtists(ARTIST_PICK_LIMIT)
+            .then((result) => {
+                if (mounted) {
+                    setArtists(result);
+                    setError("");
+                }
+            })
+            .catch(() => {
+                if (mounted) {
+                    // Provide a visible error and log for easier debugging
+                    // (on device/emulator console)
+                    // eslint-disable-next-line no-console
+                    console.error('Welcome_2: failed to load artists');
+                    setError("Could not load artists.");
+                }
+            })
+            .finally(() => {
+                if (mounted) {
+                    setLoading(false);
+                }
+            });
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    const filteredArtists = artists.filter((artist) =>
+        artist.name.toLowerCase().includes(search.toLowerCase())
+    );
 
 
     return (
         <Animated.View
-            style={{
-                flex: 1,
-                opacity: fadeAnim,
-                transform: [{ translateY }]
-            }}
+            style={[
+                styles.screen,
+                {
+                    opacity: fadeAnim,
+                    transform: [{ translateY }]
+                },
+            ]}
         >
             <BackButton onBack={navigation.goBack} />
             <View style={welcomeStyles_2.container}>
 
                 {/* CONTENT */}
                 <View style={welcomeStyles_2.content}>
-                    <Text style={welcomeStyles_1.heading}>What genres do you like?</Text>
-                    <Text style={welcomeStyles_1.subHeading}>  {"Select the genres you enjoy the most\nChoose at least 3 to personalize your music"}</Text>
+                    <Text style={welcomeStyles_1.heading}>Pick some artists you like</Text>
+                    <Text style={welcomeStyles_1.subHeading}>
+                        You can skip this for now and fill it later.
+                    </Text>
 
-                    <View style={welcomeStyles_2.genreContainer}>
-                        {genres.map((genre) => {
-                            const isSelected = selected.includes(genre);
+                    <SearchBar
+                        value={search}
+                        onChange={setSearch}
+                        placeholder="Search artists"
+                    />
 
-                            return (
-                                <Pressable
-                                    key={genre}
-                                    onPress={() => toggleGenre(genre)}
-                                    style={[
-                                        welcomeStyles_2.genreButton,
-                                        isSelected && welcomeStyles_2.genreSelected,
-                                    ]}
-                                >
-                                    <Text style={welcomeStyles_2.genreText}>{genre}</Text>
-                                </Pressable>
-                            );
-                        })}
-                    </View>
+                    {loading ? (
+                        <ActivityIndicator size="small" color="#FF5F7E" />
+                    ) : error ? (
+                        <Text style={{ color: "#FF5F7E", textAlign: "center" }}>{error}</Text>
+                    ) : filteredArtists.length === 0 ? (
+                        <Text style={{ color: "#B0B3C7", textAlign: "center" }}>
+                            No artists found.
+                        </Text>
+                    ) : (
+                        <ArtistGrid
+                            artists={filteredArtists}
+                            selected={selected}
+                            toggleArtist={toggleArtist}
+                        />
+                    )}
                 </View>
                 <WelcomeBottom
-                    text="Continue"
+                    text="Next"
                     disabled={disabled}
                     onPress={handleContinue}
-                    onSkip={onContinue}
+                    onSkip={onSkip}
                     step={2}
                     total={4}
                 />
@@ -96,3 +135,10 @@ export default function Welcome_2({ onContinue }: Props) {
         </Animated.View>
     );
 }
+
+const styles = StyleSheet.create({
+    screen: {
+        flex: 1,
+        width: "100%",
+    },
+});

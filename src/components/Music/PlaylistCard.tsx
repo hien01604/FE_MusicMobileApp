@@ -5,6 +5,7 @@ import {
     TouchableOpacity,
     Image,
     Text,
+    Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -13,6 +14,7 @@ interface PlaylistCardProps {
     songCount: number;
     thumbnail: string;
     onPress: () => void;
+    onOptionsPress?: () => void;
 }
 
 const PlaylistCard: React.FC<PlaylistCardProps> = ({
@@ -20,6 +22,7 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({
     songCount,
     thumbnail,
     onPress,
+    onOptionsPress,
 }) => {
     return (
         <TouchableOpacity
@@ -41,7 +44,19 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({
                 <Text style={styles.songCount}>{songCount} songs</Text>
             </View>
 
-            {/* Arrow Icon */}
+            {onOptionsPress ? (
+                <Pressable
+                    hitSlop={10}
+                    style={styles.optionsButton}
+                    onPress={(event) => {
+                        event.stopPropagation();
+                        onOptionsPress();
+                    }}
+                >
+                    <Ionicons name="ellipsis-horizontal" size={22} color="#AEB8D8" />
+                </Pressable>
+            ) : null}
+
             <Ionicons
                 name="chevron-forward"
                 size={24}
@@ -81,6 +96,14 @@ const styles = StyleSheet.create({
     },
     arrow: {
         marginLeft: 8,
+    },
+    optionsButton: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255,255,255,0.06)',
     },
 });
 

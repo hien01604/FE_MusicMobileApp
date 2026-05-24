@@ -6,8 +6,8 @@ import {
     ScrollView,
     Pressable,
     ActivityIndicator,
-    Alert,
 } from "react-native";
+import AppModal from "../common/AppModal";
 import { LinearGradient } from "expo-linear-gradient";
 import { authStyles } from "../../style/authStyles";
 import { useNavigation } from "@react-navigation/native";
@@ -31,6 +31,9 @@ export default function LoginForm() {
     const [error, setError] = useState<string>("");
     const [emailFocused, setEmailFocused] = useState(false);
     const [passwordFocused, setPasswordFocused] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalTitle, setModalTitle] = useState("");
+    const [modalDescription, setModalDescription] = useState("");
 
     const handleLogin = async (): Promise<void> => {
         if (!email.trim() || !password) {
@@ -49,14 +52,16 @@ export default function LoginForm() {
             return;
         }
 
-        Alert.alert("Signed in", "Login successful.");
+        setModalTitle("Signed in");
+        setModalDescription("Login successful.");
+        setModalVisible(true);
     };
     const handleForgotPassword = (): void => {
         navigation.navigate("ForgotPassword");
     };
 
     const handleSignUp = (): void => {
-        navigation.navigate("SignUp");
+        navigation.navigate("Welcome_2");
     };
 
     return (
@@ -142,6 +147,15 @@ export default function LoginForm() {
                 footerLinkText="Create one"
                 onFooterLinkPress={handleSignUp}
             />
+            <AppModal
+                visible={modalVisible}
+                title={modalTitle}
+                description={modalDescription}
+                confirmText="OK"
+                onCancel={() => setModalVisible(false)}
+                onConfirm={() => setModalVisible(false)}
+            />
         </ScrollView>
     );
 }
+

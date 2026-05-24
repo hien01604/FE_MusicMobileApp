@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { ActivityIndicator, Alert, View, Text, TouchableOpacity, Pressable } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, View, Text, TouchableOpacity, Pressable } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { authStyles } from "../../style/authStyles";
 
@@ -7,6 +7,7 @@ import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 import * as AuthSession from "expo-auth-session";
 import { useAuthContext } from "../../contexts/AuthContext";
+import AppModal from "../common/AppModal";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -25,6 +26,9 @@ export default function AuthFooter({
     const { googleLogin } = useAuthContext();
     const [error, setError] = React.useState("");
     const [loading, setLoading] = React.useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalTitle, setModalTitle] = useState("");
+    const [modalDescription, setModalDescription] = useState("");
     const redirectUri = AuthSession.makeRedirectUri({
         scheme: "musicmobile",
     });
@@ -81,8 +85,9 @@ export default function AuthFooter({
                 setError(result.message || "Google login failed");
                 return;
             }
-
-            Alert.alert("Signed in", "Google login successful.");
+            setModalTitle("Signed in");
+            setModalDescription("Google login successful.");
+            setModalVisible(true);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Google login failed");
         } finally {
@@ -133,6 +138,15 @@ export default function AuthFooter({
                     {error}
                 </Text>
             ) : null}
+
+            <AppModal
+                visible={modalVisible}
+                title={modalTitle}
+                description={modalDescription}
+                confirmText="OK"
+                onCancel={() => setModalVisible(false)}
+                onConfirm={() => setModalVisible(false)}
+            />
 
             {/* FOOTER */}
             <View style={authStyles.footerLinkContainer}>

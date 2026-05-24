@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+    Image,
     View,
     StyleSheet,
     TouchableOpacity,
@@ -9,40 +10,39 @@ import {
 interface ProfileHeaderProps {
     username: string;
     email: string;
+    avatarUrl?: string | null;
     onEditPress: () => void;
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     username,
     email,
+    avatarUrl,
     onEditPress,
 }) => {
+    const fallbackInitial = (username || email || 'P').charAt(0).toUpperCase();
+
     return (
         <View style={styles.container}>
-            {/* TOP BAR */}
-            <View style={styles.topRow}>
-                <View />
-                <TouchableOpacity
-                    style={styles.editButton}
-                    onPress={onEditPress}
-                    activeOpacity={0.7}
-                >
-                    <Text style={styles.editButtonText}>Edit Profile</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* AVATAR */}
             <View style={styles.avatarWrapper}>
                 <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>
-                        {username.charAt(0).toUpperCase()}
-                    </Text>
+                    {avatarUrl ? (
+                        <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                    ) : (
+                        <Text style={styles.avatarText}>{fallbackInitial}</Text>
+                    )}
                 </View>
             </View>
 
-            {/* USER INFO */}
             <Text style={styles.username}>{username}</Text>
             <Text style={styles.email}>{email}</Text>
+            <TouchableOpacity
+                style={styles.editButton}
+                onPress={onEditPress}
+                activeOpacity={0.75}
+            >
+                <Text style={styles.editButtonText}>Edit Profile</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -53,41 +53,33 @@ const styles = StyleSheet.create({
         marginTop: 16,
         alignItems: 'center',
     },
-
-    topRow: {
-        width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-
-    editText: {
-        color: '#FF006B',
-        fontSize: 14,
-        fontWeight: '600',
-    },
-
     avatarWrapper: {
         marginTop: 8,
-        marginBottom: 16,
+        marginBottom: 14,
+        borderRadius: 61,
+        padding: 5,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 77, 109, 0.42)',
+        backgroundColor: 'rgba(255,255,255,0.04)',
     },
-
     avatar: {
         width: 110,
         height: 110,
         borderRadius: 55,
-        backgroundColor: '#FF006B',
+        backgroundColor: '#FF4D6D',
         justifyContent: 'center',
         alignItems: 'center',
-
-        // shadow đẹp hơn
-        shadowColor: '#FF006B',
+        overflow: 'hidden',
+        shadowColor: '#FF4D6D',
         shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.4,
-        shadowRadius: 12,
+        shadowOpacity: 0.28,
+        shadowRadius: 16,
         elevation: 8,
     },
-
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+    },
     avatarText: {
         fontSize: 42,
         fontWeight: '700',
@@ -103,21 +95,22 @@ const styles = StyleSheet.create({
 
     email: {
         fontSize: 14,
-        color: '#aaa',
+        color: '#AEB8D8',
     },
     editButton: {
-    borderWidth: 1.5,
-    borderColor: '#FF006B',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-},
-
-editButtonText: {
-    color: '#FF006B',
-    fontSize: 13,
-    fontWeight: '600',
-},
+        borderWidth: 1,
+        borderColor: 'rgba(255, 77, 109, 0.72)',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 77, 109, 0.12)',
+        marginTop: 14,
+    },
+    editButtonText: {
+        color: '#FF6F86',
+        fontSize: 13,
+        fontWeight: '800',
+    },
 });
 
 export default ProfileHeader;

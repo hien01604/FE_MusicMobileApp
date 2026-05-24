@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-export const HEADER_TABS = ['Library', 'Home', 'Profile', 'Search'] as const;
+export const HEADER_TABS = ['Home', 'Library', 'Search', 'Profile'] as const;
 
 export type HeaderTab = (typeof HEADER_TABS)[number];
 
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     },
     tab: {
         paddingVertical: 8,
-        paddingHorizontal: 28,
+        paddingHorizontal: 16,
         borderRadius: 20
     },
     activeTab: {

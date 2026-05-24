@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     Pressable,
     ScrollView,
     Text,
     TextInput,
     View,
 } from "react-native";
+import AppModal from "../common/AppModal";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -28,6 +28,9 @@ export default function ResetPasswordForm() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+    const [modalVisible, setModalVisible] = useState(false);
+    const [modalTitle, setModalTitle] = useState("");
+    const [modalDescription, setModalDescription] = useState("");
 
     const handleResetPassword = async (): Promise<void> => {
         if (!token.trim() || !newPassword) {
@@ -50,21 +53,9 @@ export default function ResetPasswordForm() {
         }
 
         setMessage("Password reset successful. Please login again.");
-        Alert.alert(
-            "Password reset",
-            "Password reset successful. Please login again.",
-            [
-                {
-                    text: "Login",
-                    onPress: () => {
-                        navigation.reset({
-                            index: 0,
-                            routes: [{ name: "Login" }],
-                        });
-                    },
-                },
-            ]
-        );
+        setModalTitle("Password reset");
+        setModalDescription("Password reset successful. Please login again.");
+        setModalVisible(true);
     };
 
     return (
@@ -154,6 +145,17 @@ export default function ResetPasswordForm() {
                     {message}
                 </Text>
             ) : null}
+            <AppModal
+                visible={modalVisible}
+                title={modalTitle}
+                description={modalDescription}
+                confirmText="Login"
+                onCancel={() => setModalVisible(false)}
+                onConfirm={() => {
+                    setModalVisible(false);
+                    navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+                }}
+            />
         </ScrollView>
     );
 }

@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Artist } from '../../types';
 
 interface Props {
@@ -9,17 +9,34 @@ interface Props {
 export default function ArtistCard({ item, onPress }: Props) {
     return (
         <TouchableOpacity
-            style={{ width: 140, marginRight: 12 }}
+            style={styles.container}
             onPress={onPress}
             activeOpacity={0.85}
         >
-            <Image
-                source={{ uri: item.image }}
-                style={{ width: '100%', height: 140, borderRadius: 12 }}
-            />
-            <Text style={{ color: 'white', marginTop: 6 }}>
+            <Image source={{ uri: item.image }} style={styles.image} />
+            <Text style={styles.name} numberOfLines={1}>
                 {item.name}
             </Text>
         </TouchableOpacity>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        width: 140,
+        marginRight: 12,
+    },
+    image: {
+        width: 140,
+        height: 140,
+        borderRadius: 70,
+        backgroundColor: 'rgba(255,255,255,0.06)',
+        borderWidth: 2,
+        borderColor: 'rgba(255,255,255,0.82)',
+    },
+    name: {
+        color: '#FFFFFF',
+        marginTop: 6,
+        textAlign: 'center',
+    },
+});

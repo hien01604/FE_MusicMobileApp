@@ -1,5 +1,5 @@
 import React from "react"
-import { FlatList } from "react-native"
+import { FlatList, StyleSheet } from "react-native"
 import ArtistCard from "./ArtistCard"
 import { Artist } from "../../types/artist.types"
 
@@ -17,9 +17,12 @@ export default function ArtistGrid({
 
     return (
         <FlatList
+            style={styles.list}
+            contentContainerStyle={styles.content}
             data={artists}
             keyExtractor={(item) => item.id}
             numColumns={3}
+            columnWrapperStyle={styles.row}
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
                 <ArtistCard
@@ -31,3 +34,18 @@ export default function ArtistGrid({
         />
     )
 }
+
+const styles = StyleSheet.create({
+    list: {
+        flex: 1,
+        maxHeight: 350,
+        width: "100%",
+    },
+    content: {
+        paddingBottom: 140,
+        paddingTop: 4,
+    },
+    row: {
+        justifyContent: "space-between",
+    },
+});
