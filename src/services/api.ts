@@ -19,8 +19,14 @@ let isRefreshing = false;
 let refreshQueue: RetryableRequest[] = [];
 let unauthorizedHandler: (() => void) | null = null;
 
+const baseUrl = getApiUrl();
+// Log base URL at startup to help debugging environment issues
+// (remove or guard this in production if desired)
+// eslint-disable-next-line no-console
+console.log('API base URL:', baseUrl);
+
 const api = axios.create({
-    baseURL: getApiUrl(),
+    baseURL: baseUrl,
     timeout: API_CONFIG.TIMEOUT,
     headers: {
         "Content-Type": "application/json",
@@ -28,12 +34,79 @@ const api = axios.create({
 });
 
 const refreshClient = axios.create({
-    baseURL: getApiUrl(),
+    baseURL: baseUrl,
     timeout: API_CONFIG.TIMEOUT,
     headers: {
         "Content-Type": "application/json",
     },
 });
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function isHtmlResponse(data: string): boolean {
+    return /<!doctype html|<html[\s>]/i.test(data);
+}
+
+function isNgrokOfflineResponse(data: string): boolean {
+    return /ERR_NGROK_3200|endpoint .*ngrok-free\.app is offline/i.test(data);
+}
+
+function summarizeResponseData(data: unknown): unknown {
+    if (typeof data === "string") {
+        if (isNgrokOfflineResponse(data)) {
+            return "ngrok endpoint is offline";
+        }
+
+        if (isHtmlResponse(data)) {
+            return "HTML error page returned by API host";
+        }
+
+        return data.length > 300 ? `${data.slice(0, 300)}...` : data;
+    }
+
+    return data;
+}
+
+export function getApiErrorMessage(error: unknown, fallbackMessage: string): string {
+    if (!axios.isAxiosError(error)) {
+        return error instanceof Error ? error.message : fallbackMessage;
+    }
+
+    if (!error.response) {
+        if (error.code === "ECONNABORTED") {
+            return "API request timed out. Check that the backend is running and reachable.";
+        }
+
+        return error.message || fallbackMessage;
+    }
+
+    const { status, data } = error.response;
+    let message = fallbackMessage;
+
+    if (typeof data === "string") {
+        if (isNgrokOfflineResponse(data)) {
+            message = "API tunnel is offline. Start a new ngrok tunnel, update EXPO_PUBLIC_API_URL, then restart Expo.";
+        } else if (isHtmlResponse(data)) {
+            message = "API host returned an HTML error page instead of JSON. Check EXPO_PUBLIC_API_URL.";
+        } else if (data.trim()) {
+            message = data.trim();
+        }
+    } else if (isRecord(data)) {
+        if (typeof data.message === "string") {
+            message = data.message;
+        } else if (Array.isArray(data.message)) {
+            message = data.message.map(String).join(" ");
+        } else if (data.error) {
+            message = String(data.error);
+        }
+    } else if (error.message) {
+        message = error.message;
+    }
+
+    return status ? `[${status}] ${message}` : message;
+}
 
 export function setUnauthorizedHandler(handler: (() => void) | null): void {
     unauthorizedHandler = handler;
@@ -113,6 +186,16 @@ api.interceptors.response.use(
             originalRequest._retry ||
             isAuthSessionRequest(originalRequest.url)
         ) {
+            // Log only errors that will actually be returned to callers. A 401
+            // may still be recovered below by refreshing the access token.
+            // eslint-disable-next-line no-console
+            console.error('API error:', {
+                url: error?.config?.url,
+                method: error?.config?.method,
+                status: error?.response?.status,
+                data: summarizeResponseData(error?.response?.data),
+                message: getApiErrorMessage(error, "API request failed"),
+            });
             return Promise.reject(error);
         }
 

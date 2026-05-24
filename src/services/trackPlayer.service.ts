@@ -19,8 +19,35 @@ type TrackPlayerModule = {
     ) => { remove: () => void };
 };
 
+type ExpoAudioPlayer = {
+    currentTime?: number;
+    pause: () => void;
+    play: () => void;
+    release?: () => void;
+    seekTo?: (seconds: number) => void;
+};
+
 let cachedTrackPlayer: TrackPlayerModule | null | undefined;
+let cachedExpoAudio:
+    | {
+          createAudioPlayer: (
+              source: string,
+              options?: Record<string, unknown>
+          ) => ExpoAudioPlayer;
+          setAudioModeAsync?: (options: Record<string, unknown>) => Promise<void>;
+      }
+    | null
+    | undefined;
 let isSetupDone = false;
+let expoAudioPlayer: ExpoAudioPlayer | null = null;
+
+function getSongUrl(song: Song): string {
+    return (
+        song.audioUrl ||
+        song.streamUrl ||
+        'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+    );
+}
 
 function getTrackPlayerModule(): TrackPlayerModule | null {
     if (cachedTrackPlayer !== undefined) {
@@ -44,6 +71,20 @@ function getTrackPlayerModule(): TrackPlayerModule | null {
     }
 
     return cachedTrackPlayer;
+}
+
+function getExpoAudioModule() {
+    if (cachedExpoAudio !== undefined) {
+        return cachedExpoAudio;
+    }
+
+    try {
+        cachedExpoAudio = require('expo-audio');
+    } catch {
+        cachedExpoAudio = null;
+    }
+
+    return cachedExpoAudio;
 }
 
 async function ensureSetup() {
@@ -90,6 +131,19 @@ async function ensureSetup() {
 export async function playWithTrackPlayer(song: Song) {
     const trackPlayer = await ensureSetup();
     if (!trackPlayer) {
+        const expoAudio = getExpoAudioModule();
+        if (!expoAudio) {
+            throw new Error('No audio playback module available');
+        }
+
+        expoAudioPlayer?.pause();
+        expoAudioPlayer?.release?.();
+        await expoAudio.setAudioModeAsync?.({
+            playsInSilentMode: true,
+        });
+
+        expoAudioPlayer = expoAudio.createAudioPlayer(getSongUrl(song), { updateInterval: 1000 });
+        expoAudioPlayer.play();
         return;
     }
 
@@ -99,7 +153,7 @@ export async function playWithTrackPlayer(song: Song) {
         title: song.title,
         artist: song.artist,
         artwork: song.image,
-        url: song.audioUrl || song.streamUrl || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+        url: getSongUrl(song),
     });
     await trackPlayer.play();
 }
@@ -115,13 +169,14 @@ export async function addToTrackPlayerQueue(song: Song) {
         title: song.title,
         artist: song.artist,
         artwork: song.image,
-        url: song.audioUrl || song.streamUrl || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+        url: getSongUrl(song),
     });
 }
 
 export async function pauseTrackPlayer() {
     const trackPlayer = getTrackPlayerModule();
     if (!trackPlayer) {
+        expoAudioPlayer?.pause();
         return;
     }
     await trackPlayer.pause();
@@ -130,6 +185,12 @@ export async function pauseTrackPlayer() {
 export async function resumeTrackPlayer(song?: Song | null) {
     const trackPlayer = await ensureSetup();
     if (!trackPlayer) {
+        if (song && !expoAudioPlayer) {
+            await playWithTrackPlayer(song);
+            return;
+        }
+
+        expoAudioPlayer?.play();
         return;
     }
 
@@ -142,6 +203,41 @@ export async function resumeTrackPlayer(song?: Song | null) {
     }
 
     await trackPlayer.play();
+}
+
+export async function getPosition(): Promise<number> {
+    const trackPlayer = getTrackPlayerModule();
+    if (!trackPlayer) {
+        return expoAudioPlayer?.currentTime ?? 0;
+    }
+
+    try {
+        // Some implementations return a promise for position
+        // Use any-safe call to support different native wrappers
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pos = await (trackPlayer as any).getPosition();
+        return typeof pos === 'number' ? pos : 0;
+    } catch {
+        return 0;
+    }
+}
+
+export async function seekTo(positionSeconds: number): Promise<void> {
+    const trackPlayer = getTrackPlayerModule();
+    if (!trackPlayer) {
+        expoAudioPlayer?.seekTo?.(positionSeconds);
+        return;
+    }
+
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((trackPlayer as any).seekTo) {
+            // react-native-track-player uses seekTo(seconds)
+            await (trackPlayer as any).seekTo(positionSeconds);
+        }
+    } catch {
+        // ignore
+    }
 }
 
 export async function subscribeTrackPlayerState(

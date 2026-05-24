@@ -1,5 +1,4 @@
-import api from './api';
-import axios from 'axios';
+import api, { getApiErrorMessage } from './api';
 import type {
     AuthResponseDto,
     ForgotPasswordDto,
@@ -160,39 +159,5 @@ export function normalizeAuthResponse(data: unknown): AuthResponseDto {
  * Handle auth API errors and extract message
  */
 function handleAuthError(err: unknown, fallbackMessage: string): Error {
-    let message = fallbackMessage;
-
-    if (axios.isAxiosError(err)) {
-        if (err.response) {
-            const { status, data } = err.response;
-            const payload = data as Record<string, unknown> | undefined;
-            if (payload) {
-                if (typeof payload.message === 'string') {
-                    message = payload.message;
-                } else if (Array.isArray(payload.message)) {
-                    message = payload.message.map(String).join(' ');
-                } else if (payload.error) {
-                    message = String(payload.error);
-                } else {
-                    try {
-                        message = JSON.stringify(payload);
-                    } catch (_e) {
-                        message = String(payload);
-                    }
-                }
-            } else if (err.message) {
-                message = err.message;
-            }
-
-            if (status) {
-                message = `[${status}] ${message}`;
-            }
-        } else if (err.message) {
-            message = err.message;
-        }
-    } else if (err instanceof Error) {
-        message = err.message;
-    }
-
-    return new Error(message);
+    return new Error(getApiErrorMessage(err, fallbackMessage));
 }
